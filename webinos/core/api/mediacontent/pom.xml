@@ -8,10 +8,10 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>gallery</artifactId>
+  <artifactId>mediacontent</artifactId>
   <packaging>pom</packaging>
 
-  <name>Gallery API</name>
+  <name>MediaContent API</name>
   <url>http://www.webinos.org</url>
 
   <!-- Uncomment the plugin executions you need. If you're component structure is correct, 

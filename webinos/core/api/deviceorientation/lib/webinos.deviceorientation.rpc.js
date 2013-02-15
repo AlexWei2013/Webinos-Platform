@@ -49,9 +49,7 @@ function DeviceOrientationModule(rpcHandler, params) {
 		implFile = 'android';
 	}
 
-
 	var implModule = require('./webinos.deviceorientation.' + implFile + '.js');
-
 
 	implModule.setRPCHandler(rpcHandler);
 	implModule.setRequired(car);
@@ -59,9 +57,6 @@ function DeviceOrientationModule(rpcHandler, params) {
 	// inherit from RPCWebinosService
 	this.base = RPCWebinosService;
 	this.base(implModule.serviceDesc);
-
-
-
 
 	
 	this.addEventListener = function(params, successCB, errorCB, objectRef) {

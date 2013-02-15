@@ -1,5 +1,8 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.bridge.Env;
+import org.meshpoint.anode.java.Base;
+
 /**
  * Description: the object that is returned by the asynchronous updateItemsBatch
  * method. It makes it possible to stop this operation if it hasn't produced a
@@ -9,8 +12,11 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public interface PendingUpdateOperation {
+public abstract class PendingUpdateOperation extends Base {
 
+	private static short classId = Env.getInterfaceId(PendingUpdateOperation.class);
+	protected PendingUpdateOperation() { super(classId); }
+	
 	/**
 	 * Cancel the pending updateItemsBatch asynchronous operation. When this
 	 * method is called, the user agent must stop; all items must be or
@@ -18,5 +24,5 @@ public interface PendingUpdateOperation {
 	 * updated). Allocated resources should be released. An error callback is
 	 * issued with the DOMError name "AbortError".
 	 */
-	public void cancel();
+	public abstract void cancel();
 }

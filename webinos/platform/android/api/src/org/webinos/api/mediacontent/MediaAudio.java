@@ -1,11 +1,13 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.idl.Dictionary;
+
 /**
  * 
  * @author marius
  *
  */
-public class MediaAudio extends MediaItem {
+public class MediaAudio extends MediaItem implements Dictionary{
 
 	public String album;
 	public String[] genres;

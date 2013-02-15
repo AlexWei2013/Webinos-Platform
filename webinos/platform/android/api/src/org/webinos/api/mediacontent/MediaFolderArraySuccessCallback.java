@@ -1,5 +1,7 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.idl.Callback;
+
 /**
  * 
  * Description: callback function used to return a list of MediaFolder objects
@@ -7,6 +9,6 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public interface MediaFolderArraySuccessCallback {
+public interface MediaFolderArraySuccessCallback extends Callback {
 	public void onsuccess(MediaFolder[] folders);
 }

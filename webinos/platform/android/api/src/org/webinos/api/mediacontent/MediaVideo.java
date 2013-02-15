@@ -1,11 +1,13 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.idl.Dictionary;
+
 /**
  * 
  * @author marius
  * 
  */
-public class MediaVideo extends MediaItem {
+public class MediaVideo extends MediaItem implements Dictionary {
 
 	/**
 	 * The geographical location where the video was made.

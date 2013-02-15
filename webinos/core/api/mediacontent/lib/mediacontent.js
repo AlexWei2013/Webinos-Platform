@@ -17,7 +17,8 @@
  ******************************************************************************/
 (function () {
   "use strict";
-
+  //var mediaContentImpl = require("bridge").load("org.webinos.impl.MediaContent.MediaSourceImpl",this);
+  
   var MediaType = require("./media_types.js"),
     os = require("os"),
     path = require("path"),
@@ -46,8 +47,8 @@
     this.base = RPCWebinosService;
     this.base({
       api: 'http://webinos.org/api/mediacontent',
-      displayName: 'MediaContent',
-      description: 'MediaContent Module to view and get details about image/video/audio.'
+      displayName: 'MediaContent!!!',
+      description: 'MediaContent Module to view and get details about image/video/audio!!!.'
     });
   };
 
@@ -71,6 +72,9 @@
 
   WebinosMediaContentModule.prototype.getLocalFolders = function (params, successCB, errorCB) {
     var mediaFolder, i, list = [], stats, mediaFolders, music, video, pictures;
+
+   if(!(process.platform == "android"))
+   {
     if (os.type().toLowerCase() === "linux") {
       music = path.resolve(process.env.HOME, "Music");
       video = path.resolve(process.env.HOME, "Videos");
@@ -93,11 +97,36 @@
         list.push(mediaFolder);
       }
     }
-    if (list.length === 0) {
-      errorCB("UnknownError");
-    } else {
+           if (list.length === 0) {
+    errorCB("UnknownError");
+   } else {
       successCB(list);
     }
+ } else if(process.platform == "android"){
+	 						var mediaContentImpl = require("bridge").load("org.webinos.impl.mediacontent.MediaSourceImpl",this);
+      //  mediaContentImpl.getFolders(successCB);
+   
+        mediaFolder = new MediaType.MediaFolder();
+        mediaFolder.id = "MF_ID";
+        mediaFolder.folderURI = "/mnt/sdcard/media";
+      //  mediaFolder.title = "MF_Title";
+        mediaFolder.title = mediaContentImpl.TestMethod();
+        mediaFolder.modifiedDate = new Date(2012, 12, 12, 12, 12, 12, 12);
+       
+        list.push(mediaFolder);
+   
+       if (list.length === 0) {
+    errorCB("UnknownError");
+   } else {
+      successCB(list);
+    }
+    
+	}
+        // When run in Android, the os.type() also returns 'linux'
+    // if (os.type().toLowerCase() === "linux") {
+   // var mediaContentImpl = require("bridge").load("org.webinos.impl.MediaContent.MediaSourceImpl",this);
+   // mediaContentImpl.getFolders(successCB); 
+   
   };
 
   // sortMode and filter not implemented

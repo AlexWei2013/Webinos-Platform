@@ -1,5 +1,7 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.idl.Dictionary;
+
 /**
  * Description: SortMode is a common interface used for sorting of queried data. Note that the sorting result
  * of list type attributes is not determined.
@@ -7,7 +9,7 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public abstract class SortMode {
+public class SortMode implements Dictionary {
 	/**
 	 * The name of the object attribute used for sorting.
 	 */
@@ -38,6 +40,5 @@ public abstract class SortMode {
 	public SortMode(String attributeName, SortModeOrder order) {
 		this.attributeName = attributeName;
 		this.order = order;
-		;
 	}
 }

@@ -105,6 +105,10 @@
       function getLocalFolders() {
       if(mediaContentService) {
         mediaContentService.getLocalFolders(folderDetails, handle_errors);
+        document.getElementById('position').innerHTML = "Local folders displayed";
+      }
+      else{
+      document.getElementById('position').innerHTML = "Not bound to a service!";
       }
     }
 

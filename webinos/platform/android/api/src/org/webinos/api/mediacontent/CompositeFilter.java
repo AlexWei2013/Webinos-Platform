@@ -9,7 +9,7 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public abstract class CompositeFilter implements AbstractFilter {
+public abstract class CompositeFilter extends AbstractFilter {
 
 	public CompositeFilterType type;
 	public AbstractFilter[] filters;

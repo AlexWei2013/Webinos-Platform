@@ -39,7 +39,7 @@
 		<link>
 			<name>bridge_src</name>
 			<type>2</type>
-			<location>/Users/paddy/data/work/dev/android/anode/bridge-java/src</location>
+			<location>/home/marius/Webinos/anode/bridge-java/src</location>
 		</link>
 		<link>
 			<name>impl_src</name>
@@ -49,7 +49,7 @@
 		<link>
 			<name>libnode</name>
 			<type>2</type>
-			<location>/Users/paddy/data/work/dev/android/anode/libnode/src</location>
+			<location>/home/marius/Webinos/anode/libnode/src</location>
 		</link>
 		<link>
 			<name>util_src</name>
@@ -60,7 +60,7 @@
 	<variableList>
 		<variable>
 			<name>ANODE_ROOT</name>
-			<value>file:/FILL_THIS_IN</value>
+			<value>file:/home/marius/Webinos/anode</value>
 		</variable>
 	</variableList>
 </projectDescription>

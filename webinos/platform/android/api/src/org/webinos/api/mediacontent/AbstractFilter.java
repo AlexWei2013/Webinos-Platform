@@ -9,6 +9,6 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public interface AbstractFilter {
+public abstract class AbstractFilter {
 
 }

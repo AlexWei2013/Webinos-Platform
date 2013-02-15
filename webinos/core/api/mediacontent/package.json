@@ -12,13 +12,12 @@
   }
 , "directories":
   { "lib": "./lib",
-    "test": "./test"
+    "test": "./test", "node_modules": "./node_modules"
   }
 , "main": "./lib/mediacontent.js"
 , "dependencies":
-  {
+  { "schema": "0.2.0"
   }
 , "bundleDependencies":
-  [
-  ]
+  []
 }

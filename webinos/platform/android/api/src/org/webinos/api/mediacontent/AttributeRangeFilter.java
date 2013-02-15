@@ -7,7 +7,7 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public abstract class AttributeRangeFilter implements AbstractFilter {
+public abstract class AttributeRangeFilter extends AbstractFilter {
 
 	public String attributeName;
 	public Object initialValue;

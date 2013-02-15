@@ -8,7 +8,7 @@ package org.webinos.api.mediacontent;
  * @author marius
  * 
  */
-public abstract class AttributeFilter implements AbstractFilter {
+public abstract class AttributeFilter extends AbstractFilter {
 
 	/**
 	 * The name of the object attribute used for filtering. This is the name of the object attribute exactly

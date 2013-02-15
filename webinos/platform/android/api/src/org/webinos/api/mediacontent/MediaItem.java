@@ -2,7 +2,9 @@ package org.webinos.api.mediacontent;
 
 import java.util.Date;
 
-public class MediaItem {
+import org.meshpoint.anode.idl.Dictionary;
+
+public class MediaItem implements Dictionary{
 	public String[] editableAttributes;
 	public String id;
 	public MediaItemType type;

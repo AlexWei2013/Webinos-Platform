@@ -25,7 +25,7 @@
     <module>webnotification</module>
     <module>zap-and-shake</module>
     <module>file</module>
-    <module>gallery</module>
+    <module>mediacontent</module>
     <module>geolocation</module>
     <module>get42</module>
     <module>payment</module>

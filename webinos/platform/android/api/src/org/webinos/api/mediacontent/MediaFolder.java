@@ -2,7 +2,9 @@ package org.webinos.api.mediacontent;
 
 import java.util.Date;
 
-public class MediaFolder {
+import org.meshpoint.anode.idl.Dictionary;
+
+public class MediaFolder implements Dictionary{
 	
 	public String id;
 	public String folderURI;

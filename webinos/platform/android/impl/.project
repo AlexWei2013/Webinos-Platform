@@ -50,7 +50,7 @@
 	<variableList>
 		<variable>
 			<name>ANODE_ROOT</name>
-			<value>file:/FILL_THIS_IN</value>
+			<value>file:/home/marius/Webinos/anode</value>
 		</variable>
 	</variableList>
 </projectDescription>

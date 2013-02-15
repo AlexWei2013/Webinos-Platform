@@ -1,12 +1,14 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.idl.Dictionary;
+
 /**
  * Description: The interface that provides lyrics for music.
  * 
  * @author marius
  * 
  */
-public class MediaLyrics {
+public class MediaLyrics implements Dictionary{
 
 	public MediaLyricsType type = MediaLyricsType.UNSYNCHRONIZED;
 	

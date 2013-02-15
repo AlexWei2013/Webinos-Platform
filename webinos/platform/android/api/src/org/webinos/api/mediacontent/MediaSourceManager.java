@@ -1,7 +1,6 @@
 package org.webinos.api.mediacontent;
 
 import org.meshpoint.anode.bridge.Env;
-import org.meshpoint.anode.idl.IDLInterface;
 import org.meshpoint.anode.java.Base;
 import org.webinos.api.devicestatus.DevicestatusManager;
 

@@ -1,5 +1,7 @@
 package org.webinos.api.mediacontent;
 
+import org.meshpoint.anode.bridge.Env;
+import org.meshpoint.anode.java.Base;
 import org.webinos.api.ErrorCallback;
 import org.webinos.api.SuccessCallback;
 
@@ -10,7 +12,11 @@ import org.webinos.api.SuccessCallback;
  * @author marius
  * 
  */
-public interface MediaSource {
+public abstract class MediaSource extends Base{
+	
+	private static short classId = Env.getInterfaceId(MediaSource.class);
+	protected MediaSource() { super(classId); }
+	
 	/**
 	 * Changes attributes of a media item. When an application has changed some attributes in a MediaItem,
 	 * this method allows writing it back to the MediaSource.
@@ -18,7 +24,7 @@ public interface MediaSource {
 	 * @param item
 	 *            - The media item to update.
 	 */
-	public void updateItem(MediaItem item);
+	public abstract void updateItem(MediaItem item);
 
 	/**
 	 * Changes attributes of media items. When an application has changed any attributes in MediaItems, this
@@ -32,20 +38,11 @@ public interface MediaSource {
 	 *            - Function called when attributes have been changed.
 	 * @return
 	 */
-	public PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback);
+	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback);
 
-	public PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback,
+	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback,
 			ErrorCallback errorCallback);
 
-	/**
-	 * Gets a list of media folders. This method returns (via callback) a list of media folder objects. To
-	 * obtain a list of media items in a specific folder, use findItems() method with the folder ID. The
-	 * errorCallback is launched with these error types: UnknownError: In any other error case.
-	 * 
-	 * @param successCallback
-	 * @return
-	 */
-	public PendingGetOperation getFolders(MediaFolderArraySuccessCallback successCallback);
 
 	/**
 	 * Gets a list of media folders. This method returns (via callback) a list of media folder objects. To
@@ -56,7 +53,7 @@ public interface MediaSource {
 	 * @param errorCallback
 	 * @return
 	 */
-	public PendingGetOperation getFolders(MediaFolderArraySuccessCallback successCallback,
+	public abstract PendingGetOperation getFolders(MediaFolderArraySuccessCallback successCallback,
 			ErrorCallback errorCallback);
 
 	/**
@@ -79,7 +76,14 @@ public interface MediaSource {
 	 *         OFFSET: an offset of the result set.
 	 * @return 
 	 */
-	public PendingFindOperation findItems(MediaItemArraySuccessCallback successCallback,
+	public abstract PendingFindOperation findItems(MediaItemArraySuccessCallback successCallback,
 			ErrorCallback errorCallback, String folderId, AbstractFilter filter, SortMode sortMode,
 			long count, long offset);
+	
+	/**
+	 * Used for testing, to be removed later.
+	 * 
+	 * @return - Some random string.
+	 */
+	public abstract String TestMethod();
 }
