@@ -15,7 +15,9 @@ import org.webinos.api.SuccessCallback;
 public abstract class MediaSource extends Base{
 	
 	private static short classId = Env.getInterfaceId(MediaSource.class);
-	protected MediaSource() { super(classId); }
+	protected MediaSource() { 
+		super(classId); 
+		}
 	
 	/**
 	 * Changes attributes of a media item. When an application has changed some attributes in a MediaItem,
@@ -36,12 +38,14 @@ public abstract class MediaSource extends Base{
 	 *            - Media items to change.
 	 * @param successCallback
 	 *            - Function called when attributes have been changed.
+	 *@param errorCallback
+	 *			  - Function called when an error occurred.            
 	 * @return
 	 */
-	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback);
-
 	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback,
 			ErrorCallback errorCallback);
+	
+	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback);
 
 
 	/**

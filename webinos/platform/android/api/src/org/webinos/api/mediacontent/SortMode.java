@@ -18,27 +18,27 @@ public class SortMode implements Dictionary {
 	/**
 	 * The type of the sorting. By default, this attribute is set to "ASC".
 	 */
-	public SortModeOrder order;
+	public SortModeOrder order = SortModeOrder.ASC;
 
-	/**
-	 * 
-	 * @param attributeName
-	 *            - The name of the object attribute used for sorting.
-	 */
-	public SortMode(String attributeName) {
-		this.attributeName = attributeName;
-		this.order = SortModeOrder.ASC;
-	}
+//	/**
+//	 * 
+//	 * @param attributeName
+//	 *            - The name of the object attribute used for sorting.
+//	 */
+//	public SortMode(String attributeName) {
+//		this.attributeName = attributeName;
+//		this.order = SortModeOrder.ASC;
+//	}
 
-	/**
-	 * 
-	 * @param attributeName
-	 *            - The name of the object attribute used for sorting.
-	 * @param order
-	 *            - The type of the sorting.
-	 */
-	public SortMode(String attributeName, SortModeOrder order) {
-		this.attributeName = attributeName;
-		this.order = order;
-	}
+//	/**
+//	 * 
+//	 * @param attributeName
+//	 *            - The name of the object attribute used for sorting.
+//	 * @param order
+//	 *            - The type of the sorting.
+//	 */
+//	public SortMode(String attributeName, SortModeOrder order) {
+//		this.attributeName = attributeName;
+//		this.order = order;
+//	}
 }

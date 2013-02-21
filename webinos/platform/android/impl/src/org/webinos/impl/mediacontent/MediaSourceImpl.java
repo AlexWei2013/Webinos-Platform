@@ -19,13 +19,17 @@
 
 package org.webinos.impl.mediacontent;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.UUID;
 
 import org.meshpoint.anode.module.IModule;
 import org.meshpoint.anode.module.IModuleContext;
 import org.webinos.api.ErrorCallback;
 import org.webinos.api.SuccessCallback;
 import org.webinos.api.mediacontent.AbstractFilter;
+import org.webinos.api.mediacontent.FilterMatchFlag;
 import org.webinos.api.mediacontent.MediaFolder;
 import org.webinos.api.mediacontent.MediaFolderArraySuccessCallback;
 import org.webinos.api.mediacontent.MediaFolderStorageType;
@@ -37,6 +41,7 @@ import org.webinos.api.mediacontent.PendingGetOperation;
 import org.webinos.api.mediacontent.PendingUpdateOperation;
 import org.webinos.api.mediacontent.SortMode;
 
+import android.os.Environment;
 import android.util.Log;
 
 public class MediaSourceImpl extends MediaSource implements IModule {
@@ -90,19 +95,37 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 
 		// http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
 
-		MediaFolder mFolder = new MediaFolder();
-		mFolder.folderURI = "/path/to/folder";
-		mFolder.id = "12345678";
-		mFolder.modifiedDate = new Date(1988, 10, 8);
-		mFolder.storageType = MediaFolderStorageType.EXTERNAL;
-		mFolder.title = "Marius_DummyFolder";
+		MediaFolder mFolder = MakeDummyMF();
+		MediaFolder[] dummyResult = new MediaFolder[1];
+		dummyResult[0] = mFolder;
 
-		MediaFolder[] dummyResult = { mFolder };
+//		ArrayList<File> nativeMediaFolders = new ArrayList<File>();
+//		File picturesFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+//		nativeMediaFolders.add(picturesFolder);
+//		File musicFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+//		nativeMediaFolders.add(musicFolder);
+//		File videosFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+//		nativeMediaFolders.add(videosFolder);
+//
+//		for (int i = 0; i < nativeMediaFolders.size(); i++) {
+//			dummyResult[i+1] = mediaFolderFromFile(nativeMediaFolders.get(i));
+//		}
 
 		successCallback.onsuccess(dummyResult);
-		Log.e(TAG, "Dummy data sent!!!!!!!!");
+		Log.i(TAG, "Dummy data sent!!!!!!!!");
 
 		return null;
+	}
+
+	private MediaFolder mediaFolderFromFile(File file) {
+		MediaFolder mf = new MediaFolder();
+//		mf.id = UUID.randomUUID().toString();
+		mf.id = "12345678";
+		mf.folderURI = file.getPath();
+		mf.title = file.getName();
+		mf.storageType = MediaFolderStorageType.INTERNAL;
+		mf.modifiedDate = new Date(file.lastModified());
+		return mf;
 	}
 
 	@Override
@@ -120,6 +143,17 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	public String TestMethod() {
 		// TODO Auto-generated method stub
 		return "Test method returned succesfully!";
+	}
+	
+	private MediaFolder MakeDummyMF(){
+		MediaFolder mFolder = new MediaFolder();
+		mFolder.folderURI = "/path/to/folder";
+		mFolder.id = "12345678";
+		mFolder.modifiedDate = new Date(1988, 10, 8);
+		mFolder.storageType = MediaFolderStorageType.EXTERNAL;
+		mFolder.title = "Marius_DummyFolder";
+		
+		return mFolder;
 	}
 
 }

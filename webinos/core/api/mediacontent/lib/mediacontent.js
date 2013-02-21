@@ -104,22 +104,22 @@
     }
  } else if(process.platform == "android"){
 	 						var mediaContentImpl = require("bridge").load("org.webinos.impl.mediacontent.MediaSourceImpl",this);
-      //  mediaContentImpl.getFolders(successCB);
+        mediaContentImpl.getFolders(successCB, errorCB);
    
-        mediaFolder = new MediaType.MediaFolder();
-        mediaFolder.id = "MF_ID";
-        mediaFolder.folderURI = "/mnt/sdcard/media";
+      //          mediaFolder = new MediaType.MediaFolder();
+      //          mediaFolder.id = "MF_ID";
+      //  mediaFolder.folderURI = "/mnt/sdcard/media";
       //  mediaFolder.title = "MF_Title";
-        mediaFolder.title = mediaContentImpl.TestMethod();
-        mediaFolder.modifiedDate = new Date(2012, 12, 12, 12, 12, 12, 12);
+      //          mediaFolder.title = mediaContentImpl.TestMethod();
+      //          mediaFolder.modifiedDate = new Date(2012, 12, 12, 12, 12, 12, 12);
        
-        list.push(mediaFolder);
+      //          list.push(mediaFolder);
    
-       if (list.length === 0) {
-    errorCB("UnknownError");
-   } else {
-      successCB(list);
-    }
+             //  if (list.length === 0) {
+          //  errorCB("UnknownError");
+         //  } else {
+            //  successCB(list);
+          //  }
     
 	}
         // When run in Android, the os.type() also returns 'linux'
