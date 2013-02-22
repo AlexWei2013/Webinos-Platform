@@ -47,7 +47,7 @@
     this.base = RPCWebinosService;
     this.base({
       api: 'http://webinos.org/api/mediacontent',
-      displayName: 'MediaContent!!!',
+      displayName: 'MediaContent',
       description: 'MediaContent Module to view and get details about image/video/audio!!!.'
     });
   };
