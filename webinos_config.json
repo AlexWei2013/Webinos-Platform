@@ -9,20 +9,14 @@
   },
   "pzhDefaultServices":[
     {
-      "name"  :"context",
-      "params":{}
-    },
-    {
-      "name"  :"events",
-      "params":{}
-    },
-    {
       "name"  :"test",
       "params":{}
     },
     {
       "name"  :"app2app",
-      "params":{}
+        "params":{
+            "scope":"pzh"
+        }
     }
   ],
   "pzpDefaultServices":[
@@ -33,12 +27,14 @@
       }
     },
     {
-      "name"  :"zap-and-shake",
+      "name"  :"actuator",
       "params":{}
     },
     {
-      "name"  :"actuator",
-      "params":{}
+        "name"  :"app2app",
+        "params":{
+            "scope":"pzp"
+        }
     },
     {
       "name"  :"webnotification",
@@ -109,6 +105,10 @@
       "params":{}
     },
     {
+      "name"  :"corePZinformation",
+      "params":{}
+    },
+    {
       "name"  :"nfc",
       "params":{}
     }
@@ -121,5 +121,6 @@
     "orgunit":"WP4",
     "cn"     :"",
     "email"  :"hello@webinos.org"
-  }
+  },
+  "friendlyName":""
 }
