@@ -93,9 +93,9 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	public PendingGetOperation getFolders(MediaFolderArraySuccessCallback successCallback,
 			ErrorCallback errorCallback) {
 		Thread c = Thread.currentThread();
-		Log.i(TAG,"Thread ID: "+c.getId());
+		Log.i(TAG,"Thread ID from getFolders: "+c.getId());
 		GetMediaFoldersRunnable pgot = new GetMediaFoldersRunnable(successCallback, errorCallback);
-		pgot.execute(null);
+		pgot.execute(successCallback);
 		return new PendingGetOperationThreaded(pgot);
 	}
 
@@ -206,6 +206,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 
 		@Override
 		public void cancelJob() {
+			Log.i(TAG, "Cancel called");
 			this.cancel(true);
 
 		}
@@ -219,8 +220,10 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
 				mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC));
 				mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES));
-				if (this.isCancelled())
+				if (this.isCancelled()){
+					Log.i(TAG,"Canceled");
 					return null;
+				}
 				MediaFolder[] resultArray = new MediaFolder[mediaFolders.size()];
 				for (int i = 0; i < mediaFolders.size(); i++) {
 					try {
@@ -230,14 +233,17 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 						this.errorCallback.onerror(new DeviceAPIError(DeviceAPIError.SECURITY_ERR));
 						return null;
 					}
-					if (this.isCancelled())
+					if (this.isCancelled()){
+						Log.i(TAG,"Canceled");
 						return null;
 				}
+				}
 				Thread c = Thread.currentThread();
-				Log.i(TAG,"Thread ID: "+c.getId());
+				Log.i(TAG,"Thread ID from doInBackground: "+c.getId());
 				return resultArray;
 			} catch (Exception e) {
 				this.errorCallback.onerror(new DeviceAPIError(DeviceAPIError.NOT_SUPPORTED_ERR));
+				Log.i(TAG,"Failed while getting media folders with following error:"+e.toString());
 				return null;
 			}
 		}
@@ -249,7 +255,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			// Callback only if it wasn't interrupted
 			if (result != null) {
 				Thread c = Thread.currentThread();
-				Log.i(TAG,"Thread ID: "+c.getId());
+				Log.i(TAG,"Thread ID from onPostExecute: "+c.getId());
 				mfasCallback.onsuccess(result);
 			}
 		}
