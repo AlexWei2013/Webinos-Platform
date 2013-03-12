@@ -45,8 +45,6 @@ public abstract class MediaSource extends Base{
 	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback,
 			ErrorCallback errorCallback);
 	
-	public abstract PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback);
-
 
 	/**
 	 * Gets a list of media folders. This method returns (via callback) a list of media folder objects. To
@@ -84,10 +82,4 @@ public abstract class MediaSource extends Base{
 			ErrorCallback errorCallback, String folderId, AbstractFilter filter, SortMode sortMode,
 			long count, long offset);
 	
-	/**
-	 * Used for testing, to be removed later.
-	 * 
-	 * @return - Some random string.
-	 */
-	public abstract String TestMethod();
 }

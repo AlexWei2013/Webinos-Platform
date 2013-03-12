@@ -7,7 +7,7 @@ import org.meshpoint.anode.idl.Dictionary;
 public class MediaItem implements Dictionary{
 	public String[] editableAttributes;
 	public String id;
-	public MediaItemType type;
+	public String type;
 	public String mimeType;
 	public String title;
 	public String itemURI;

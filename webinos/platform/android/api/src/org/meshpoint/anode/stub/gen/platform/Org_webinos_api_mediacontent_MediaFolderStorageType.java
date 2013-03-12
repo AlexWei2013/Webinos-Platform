@@ -11,12 +11,18 @@ public class Org_webinos_api_mediacontent_MediaFolderStorageType {
 	static Object __invoke(org.webinos.api.mediacontent.MediaFolderStorageType inst, int opIdx, Object[] args) {
 		Object result = null;
 		switch(opIdx) {
-		case 0: /* valueOf */
+		case 0: /* displayintegerValue */
+			result = inst.displayintegerValue();
+			break;
+		case 1: /* toString */
+			result = inst.toString();
+			break;
+		case 2: /* valueOf */
 			result = inst.valueOf(
 				(String)args[0]
 			);
 			break;
-		case 1: /* values */
+		case 3: /* values */
 			result = inst.values();
 			break;
 		default:

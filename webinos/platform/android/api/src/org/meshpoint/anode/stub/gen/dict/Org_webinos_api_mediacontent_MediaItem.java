@@ -20,7 +20,7 @@ public class Org_webinos_api_mediacontent_MediaItem {
 		ob.size = ((org.meshpoint.anode.js.JSValue)vals[8]).longValue;
 		ob.thumbnailURIs = (String[])vals[9];
 		ob.title = (String)vals[10];
-		ob.type = (org.webinos.api.mediacontent.MediaItemType)vals[11];
+		ob.type = (String)vals[11];
 	}
 
 	public static Object[] __export(org.webinos.api.mediacontent.MediaItem ob) {
