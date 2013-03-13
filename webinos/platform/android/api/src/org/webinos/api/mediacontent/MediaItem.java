@@ -7,6 +7,9 @@ import org.meshpoint.anode.idl.Dictionary;
 public class MediaItem implements Dictionary{
 	public String[] editableAttributes;
 	public String id;
+	/**
+	 * Use the MediaItemType enum to choose a type and then call its toString() method
+	 */
 	public String type;
 	public String mimeType;
 	public String title;

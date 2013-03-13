@@ -11,27 +11,18 @@ package org.webinos.api.mediacontent;
  */
 public abstract class CompositeFilter extends AbstractFilter {
 
-	public CompositeFilterType type;
+	public String CompositeFilterType;
 	public AbstractFilter[] filters;
 
 	/**
 	 * 
-	 * @param type
-	 *            - the composite filter type;
-	 */
-	public CompositeFilter(CompositeFilterType type) {
-		this.type = type;
-	}
-
-	/**
-	 * 
-	 * @param type
+	 * @param compositeFilterType
 	 *            - the composite filter type;
 	 * @param filters
 	 *            - the list of filters in the composite filter.
 	 */
-	public CompositeFilter(CompositeFilterType type, AbstractFilter[] filters) {
-		this.type = type;
+	public CompositeFilter(String compositeFilterType, AbstractFilter[] filters) {
+		this.CompositeFilterType = compositeFilterType;
 		this.filters = filters;
 	}
 }

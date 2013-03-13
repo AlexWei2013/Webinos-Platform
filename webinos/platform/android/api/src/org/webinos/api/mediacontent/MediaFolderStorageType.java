@@ -1,19 +1,38 @@
 package org.webinos.api.mediacontent;
 
 public enum MediaFolderStorageType {
-	INTERNAL(0), 
-	EXTERNAL(1),
-	UNKNOWN(2);
-	
-	private Integer integerValue;
-	private MediaFolderStorageType(Integer integerValue) {
-		 this.integerValue = integerValue;
+	INTERNAL(0), EXTERNAL(1), UNKNOWN(2);
+
+	private Integer intValue;
+
+	private MediaFolderStorageType(Integer intValue) {
+		this.intValue = intValue;
 	}
-	
-	public Integer displayintegerValue(){ return this.integerValue;}
-	
+
 	@Override
-	public String toString(){
-		return this.integerValue.toString();
+	public String toString() {
+		switch (this) {
+
+		case INTERNAL:
+			return "INTERNAL";
+		case EXTERNAL:
+			return "EXTERNAL";
+		default:
+			return "UNKNOWN";
+
+		}
+	}
+
+	public int toInt() {
+		switch (this) {
+
+		case INTERNAL:
+			return 0;
+		case EXTERNAL:
+			return 1;
+		default:
+			return 2;
+
+		}
 	}
 }

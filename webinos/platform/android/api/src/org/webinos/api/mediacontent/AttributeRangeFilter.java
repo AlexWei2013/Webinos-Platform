@@ -13,18 +13,6 @@ public abstract class AttributeRangeFilter extends AbstractFilter {
 	public Object initialValue;
 	public Object endValue;
 
-	/**
-	 * 
-	 * @param attributeName
-	 *            - The name of the object attribute used for filtering. This is the name of the object
-	 *            attribute exactly as it is defined in the object's interface. For attributes of complex
-	 *            type, use fully-qualified names (such as 'organizations.role' to filter on a contact's role
-	 *            in an organization). For attributes of array type, the filter will match if any value in the
-	 *            array matches.
-	 */
-	public AttributeRangeFilter(String attributeName) {
-		this.attributeName = attributeName;
-	}
 
 	/**
 	 * 

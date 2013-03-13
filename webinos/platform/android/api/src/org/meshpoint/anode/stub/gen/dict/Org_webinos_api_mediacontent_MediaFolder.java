@@ -12,7 +12,7 @@ public class Org_webinos_api_mediacontent_MediaFolder {
 		ob.folderURI = (String)vals[0];
 		ob.id = (String)vals[1];
 		ob.modifiedDate = (java.util.Date)vals[2];
-		ob.storageType = (org.webinos.api.mediacontent.MediaFolderStorageType)vals[3];
+		ob.storageType = (String)vals[3];
 		ob.title = (String)vals[4];
 	}
 

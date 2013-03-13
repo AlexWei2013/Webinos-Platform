@@ -11,8 +11,8 @@ public class Org_webinos_api_mediacontent_MediaFolderStorageType {
 	static Object __invoke(org.webinos.api.mediacontent.MediaFolderStorageType inst, int opIdx, Object[] args) {
 		Object result = null;
 		switch(opIdx) {
-		case 0: /* displayintegerValue */
-			result = inst.displayintegerValue();
+		case 0: /* toInt */
+			result = org.meshpoint.anode.js.JSValue.asJSNumber((long)inst.toInt());
 			break;
 		case 1: /* toString */
 			result = inst.toString();

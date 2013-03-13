@@ -10,7 +10,7 @@ public class Org_webinos_api_mediacontent_SortMode {
 
 	public static void __import(org.webinos.api.mediacontent.SortMode ob, Object[] vals) {
 		ob.attributeName = (String)vals[0];
-		ob.order = (org.webinos.api.mediacontent.SortModeOrder)vals[1];
+		ob.order = (String)vals[1];
 	}
 
 	public static Object[] __export(org.webinos.api.mediacontent.SortMode ob) {

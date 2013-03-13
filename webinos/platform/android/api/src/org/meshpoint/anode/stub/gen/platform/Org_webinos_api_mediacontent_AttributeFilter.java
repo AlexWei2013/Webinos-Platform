@@ -14,8 +14,8 @@ public class Org_webinos_api_mediacontent_AttributeFilter {
 		case 0: /* attributeName */
 			result = inst.attributeName;
 			break;
-		case 1: /* matchFlag */
-			result = inst.matchFlag;
+		case 1: /* filterMatchFlag */
+			result = inst.filterMatchFlag;
 			break;
 		case 2: /* matchValue */
 			result = inst.matchValue;
@@ -30,8 +30,8 @@ public class Org_webinos_api_mediacontent_AttributeFilter {
 		case 0: /* attributeName */
 			inst.attributeName = (String)val;
 			break;
-		case 1: /* matchFlag */
-			inst.matchFlag = (org.webinos.api.mediacontent.FilterMatchFlag)val;
+		case 1: /* filterMatchFlag */
+			inst.filterMatchFlag = (String)val;
 			break;
 		case 2: /* matchValue */
 			inst.matchValue = val;

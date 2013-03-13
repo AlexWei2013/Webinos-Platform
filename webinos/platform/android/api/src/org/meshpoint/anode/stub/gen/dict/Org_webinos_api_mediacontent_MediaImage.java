@@ -11,7 +11,7 @@ public class Org_webinos_api_mediacontent_MediaImage {
 	public static void __import(org.webinos.api.mediacontent.MediaImage ob, Object[] vals) {
 		ob.geolocation = (org.webinos.api.mediacontent.SimpleCoordinates)vals[0];
 		ob.height = ((org.meshpoint.anode.js.JSValue)vals[1]).longValue;
-		ob.orientation = (org.webinos.api.mediacontent.MediaImageOrientation)vals[2];
+		ob.orientation = (String)vals[2];
 		ob.width = ((org.meshpoint.anode.js.JSValue)vals[3]).longValue;
 	}
 

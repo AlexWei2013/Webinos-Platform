@@ -11,11 +11,11 @@ public class Org_webinos_api_mediacontent_CompositeFilter {
 	static Object __get(org.webinos.api.mediacontent.CompositeFilter inst, int attrIdx) {
 		Object result = null;
 		switch(attrIdx) {
-		case 0: /* filters */
-			result = inst.filters;
+		case 0: /* CompositeFilterType */
+			result = inst.CompositeFilterType;
 			break;
-		case 1: /* type */
-			result = inst.type;
+		case 1: /* filters */
+			result = inst.filters;
 			break;
 		default:
 		}
@@ -24,11 +24,11 @@ public class Org_webinos_api_mediacontent_CompositeFilter {
 
 	static void __set(org.webinos.api.mediacontent.CompositeFilter inst, int attrIdx, Object val) {
 		switch(attrIdx) {
-		case 0: /* filters */
-			inst.filters = (org.webinos.api.mediacontent.AbstractFilter[])val;
+		case 0: /* CompositeFilterType */
+			inst.CompositeFilterType = (String)val;
 			break;
-		case 1: /* type */
-			inst.type = (org.webinos.api.mediacontent.CompositeFilterType)val;
+		case 1: /* filters */
+			inst.filters = (org.webinos.api.mediacontent.AbstractFilter[])val;
 			break;
 		default:
 			throw new UnsupportedOperationException();

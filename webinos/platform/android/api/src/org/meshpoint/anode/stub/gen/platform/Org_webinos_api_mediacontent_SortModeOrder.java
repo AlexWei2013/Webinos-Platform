@@ -11,12 +11,18 @@ public class Org_webinos_api_mediacontent_SortModeOrder {
 	static Object __invoke(org.webinos.api.mediacontent.SortModeOrder inst, int opIdx, Object[] args) {
 		Object result = null;
 		switch(opIdx) {
-		case 0: /* valueOf */
+		case 0: /* toInteger */
+			result = org.meshpoint.anode.js.JSValue.asJSNumber((long)inst.toInteger());
+			break;
+		case 1: /* toString */
+			result = inst.toString();
+			break;
+		case 2: /* valueOf */
 			result = inst.valueOf(
 				(String)args[0]
 			);
 			break;
-		case 1: /* values */
+		case 3: /* values */
 			result = inst.values();
 			break;
 		default:

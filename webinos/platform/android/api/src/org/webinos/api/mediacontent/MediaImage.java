@@ -19,5 +19,5 @@ public class MediaImage extends MediaItem implements Dictionary {
 	/**
 	 * Information about image orientation.
 	 */
-	public MediaImageOrientation orientation;
+	public String orientation;
 }

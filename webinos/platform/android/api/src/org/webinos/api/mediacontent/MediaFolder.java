@@ -9,7 +9,7 @@ public class MediaFolder implements Dictionary{
 	public String id;
 	public String folderURI;
 	public String title;
-	public MediaFolderStorageType storageType;
+	public String storageType;
 	public Date modifiedDate;
 	
 	
