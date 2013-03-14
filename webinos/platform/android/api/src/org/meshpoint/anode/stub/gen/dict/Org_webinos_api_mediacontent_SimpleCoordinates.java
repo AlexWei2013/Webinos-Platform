@@ -9,15 +9,15 @@ public class Org_webinos_api_mediacontent_SimpleCoordinates {
 	public static Object[] __getArgs() { return __args; }
 
 	public static void __import(org.webinos.api.mediacontent.SimpleCoordinates ob, Object[] vals) {
-		ob.altitude = ((org.meshpoint.anode.js.JSValue)vals[0]).dblValue;
-		ob.latitude = ((org.meshpoint.anode.js.JSValue)vals[1]).dblValue;
-		ob.longitude = ((org.meshpoint.anode.js.JSValue)vals[2]).dblValue;
+		ob.altitude = (Double)vals[0];
+		ob.latitude = (Double)vals[1];
+		ob.longitude = (Double)vals[2];
 	}
 
 	public static Object[] __export(org.webinos.api.mediacontent.SimpleCoordinates ob) {
-		__args[0] = org.meshpoint.anode.js.JSValue.asJSNumber(ob.altitude);
-		__args[1] = org.meshpoint.anode.js.JSValue.asJSNumber(ob.latitude);
-		__args[2] = org.meshpoint.anode.js.JSValue.asJSNumber(ob.longitude);
+		__args[0] = ob.altitude;
+		__args[1] = ob.latitude;
+		__args[2] = ob.longitude;
 		return __args;
 	}
 

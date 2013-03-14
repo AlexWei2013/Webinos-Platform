@@ -15,9 +15,9 @@ public class Org_webinos_api_mediacontent_MediaItem {
 		ob.itemURI = (String)vals[3];
 		ob.mimeType = (String)vals[4];
 		ob.modifiedDate = (java.util.Date)vals[5];
-		ob.rating = ((org.meshpoint.anode.js.JSValue)vals[6]).dblValue;
+		ob.rating = (Double)vals[6];
 		ob.releaseDate = (java.util.Date)vals[7];
-		ob.size = ((org.meshpoint.anode.js.JSValue)vals[8]).longValue;
+		ob.size = (Long)vals[8];
 		ob.thumbnailURIs = (String[])vals[9];
 		ob.title = (String)vals[10];
 		ob.type = (String)vals[11];
@@ -30,9 +30,9 @@ public class Org_webinos_api_mediacontent_MediaItem {
 		__args[3] = ob.itemURI;
 		__args[4] = ob.mimeType;
 		__args[5] = ob.modifiedDate;
-		__args[6] = org.meshpoint.anode.js.JSValue.asJSNumber(ob.rating);
+		__args[6] = ob.rating;
 		__args[7] = ob.releaseDate;
-		__args[8] = org.meshpoint.anode.js.JSValue.asJSNumber(ob.size);
+		__args[8] = ob.size;
 		__args[9] = ob.thumbnailURIs;
 		__args[10] = ob.title;
 		__args[11] = ob.type;

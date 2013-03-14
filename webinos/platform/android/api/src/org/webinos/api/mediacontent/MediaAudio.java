@@ -15,15 +15,15 @@ public class MediaAudio extends MediaItem implements Dictionary{
 	public String[] composers;
 	public MediaLyrics lyrics;
 	public String copyright;
-	public long bitrate;
-	public long trackNumber;
-	public long duration;
+	public Long bitrate;
+	public Integer trackNumber;
+	public Long duration;
 
 	/**
 	 * The timestamp that determines where the playback has been paused or
 	 * stopped previously. This allows a media player application to resume
 	 * playback from that point.
 	 */
-	public long playedTime;
-	public long playCount;
+	public Long playedTime;
+	public Long playCount;
 }

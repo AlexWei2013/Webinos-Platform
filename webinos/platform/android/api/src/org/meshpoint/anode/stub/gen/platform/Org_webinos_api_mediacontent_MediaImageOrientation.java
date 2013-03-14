@@ -57,6 +57,9 @@ public class Org_webinos_api_mediacontent_MediaImageOrientation {
 		case 7: /* TRANSVERSE */
 			result = org.webinos.api.mediacontent.MediaImageOrientation.TRANSVERSE;
 			break;
+		case 8: /* UNDEFINED */
+			result = org.webinos.api.mediacontent.MediaImageOrientation.UNDEFINED;
+			break;
 		default:
 		}
 		return result;

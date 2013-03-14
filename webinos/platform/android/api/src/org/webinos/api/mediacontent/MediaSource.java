@@ -80,6 +80,6 @@ public abstract class MediaSource extends Base{
 	 */
 	public abstract PendingFindOperation findItems(MediaItemArraySuccessCallback successCallback,
 			ErrorCallback errorCallback, String folderId, AbstractFilter abstractFilter, SortMode sortMode,
-			long count, long offset);
+			Integer count, Integer offset);
 	
 }

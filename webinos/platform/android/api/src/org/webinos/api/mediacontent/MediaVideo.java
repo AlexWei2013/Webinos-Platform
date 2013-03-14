@@ -26,10 +26,10 @@ public class MediaVideo extends MediaItem implements Dictionary {
 	 * stopped previously. This allows the media player application to resume
 	 * playback from that point.
 	 */
-	public long playedTime;
+	public Long playedTime;
 	/**
 	 * The number of times the video has been played.
 	 */
-	public long playCount;
+	public Long playCount;
 
 }

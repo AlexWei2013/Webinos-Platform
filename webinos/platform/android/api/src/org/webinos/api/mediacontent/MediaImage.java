@@ -13,8 +13,8 @@ public class MediaImage extends MediaItem implements Dictionary {
 	 * The geographical location where the image has been made.
 	 */
 	public SimpleCoordinates geolocation;
-	public long width;
-	public long height;
+	public int width;
+	public int height;
 
 	/**
 	 * Information about image orientation.

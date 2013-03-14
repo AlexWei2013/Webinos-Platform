@@ -17,8 +17,8 @@ public class MediaItem implements Dictionary{
 	public String[] thumbnailURIs;
 	public Date releaseDate;
 	public Date modifiedDate;
-	public long size;
+	public Long size;
 	public String description;
-	public  double rating;
+	public Double rating;
 
 }

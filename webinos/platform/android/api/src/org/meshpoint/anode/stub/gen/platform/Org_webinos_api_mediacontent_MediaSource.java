@@ -18,8 +18,8 @@ public class Org_webinos_api_mediacontent_MediaSource {
 				(String)args[2],
 				(org.webinos.api.mediacontent.AbstractFilter)args[3],
 				(org.webinos.api.mediacontent.SortMode)args[4],
-				((org.meshpoint.anode.js.JSValue)args[5]).longValue,
-				((org.meshpoint.anode.js.JSValue)args[6]).longValue
+				(Integer)args[5],
+				(Integer)args[6]
 			);
 			break;
 		case 1: /* getFolders */
