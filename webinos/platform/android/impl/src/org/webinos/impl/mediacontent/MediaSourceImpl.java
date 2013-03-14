@@ -37,6 +37,8 @@ import org.webinos.api.DeviceAPIError;
 import org.webinos.api.ErrorCallback;
 import org.webinos.api.SuccessCallback;
 import org.webinos.api.mediacontent.AbstractFilter;
+import org.webinos.api.mediacontent.AttributeFilter;
+import org.webinos.api.mediacontent.CompositeFilter;
 import org.webinos.api.mediacontent.MediaAudio;
 import org.webinos.api.mediacontent.MediaFolder;
 import org.webinos.api.mediacontent.MediaFolderArraySuccessCallback;
@@ -53,6 +55,7 @@ import org.webinos.api.mediacontent.PendingGetOperation;
 import org.webinos.api.mediacontent.PendingUpdateOperation;
 import org.webinos.api.mediacontent.SimpleCoordinates;
 import org.webinos.api.mediacontent.SortMode;
+import org.webinos.api.mediacontent.SortModeOrder;
 
 import android.R.string;
 import android.content.Context;
@@ -125,7 +128,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	@Override
 	public PendingFindOperation findItems(MediaItemArraySuccessCallback successCallback,
 			ErrorCallback errorCallback, String folderId, AbstractFilter abstractFilter, SortMode sortMode,
-			long count, long offset) {
+			Integer count, Integer offset) {
 		/**
 		 * FindItemsRunnable fir = new FindItemsRunnable(successCallback, errorCallback);
 		 * 
@@ -133,7 +136,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		 * 
 		 * fir.execute(null);
 		 */
-		this.SendMediaItems(successCallback, errorCallback);
+		this.SendMediaItems(successCallback, errorCallback, folderId, abstractFilter, sortMode, count, offset);
 		return null;
 	}
 
@@ -203,33 +206,108 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 	}
 
-	private void SendMediaItems(MediaItemArraySuccessCallback successCallback, ErrorCallback errorCallback) {
+	private void SendMediaItems(MediaItemArraySuccessCallback successCallback, ErrorCallback errorCallback,
+			String folderId, AbstractFilter abstractFilter, SortMode sortMode, Integer count, Integer offset) {
 		try {
 			ArrayList<MediaItem> mediaItemsList = new ArrayList<MediaItem>();
 			String[] projection = {};
 			String selection = "";
 			String[] selectionArgs = {};
 			String sortOrder = "";
-			sortOrder = MediaStore.Images.ImageColumns.SIZE + " DESC";
 
-			ArrayList<MediaItem> imageQueryArrayList = queryMediaFolder(MediaItemType.IMAGE, projection,
+			SortMode tempSortMode = new SortMode();
+			// tempSortMode.attributeName = MediaStore.Images.ImageColumns.SIZE;
+			tempSortMode.attributeName = MediaStore.Audio.Media.TRACK;
+			tempSortMode.order = SortModeOrder.DESC.toString();
+			sortOrder = getSortModeCountOffsetString(tempSortMode, null, null);
+
+			// ArrayList<MediaItem> imageQueryArrayList = queryMediaFolder(MediaItemType.IMAGE, projection,
+			// selection, selectionArgs, sortOrder);
+			// mediaItemsList.addAll(imageQueryArrayList);
+
+			ArrayList<MediaItem> videoQueryArrayList = queryMediaFolder(MediaItemType.VIDEO, projection,
 					selection, selectionArgs, sortOrder);
-			mediaItemsList.addAll(imageQueryArrayList);
-			
-//			ArrayList<MediaItem> videoQueryArrayList = queryMediaFolder(MediaItemType.VIDEO, projection,
-//					selection, selectionArgs, sortOrder);
-//			mediaItemsList.addAll(videoQueryArrayList);
-//
-//			 ArrayList<MediaItem> audioQueryArrayList = queryMediaFolder(MediaItemType.AUDIO, projection,
-//			 selection, selectionArgs, sortOrder);
-//			 mediaItemsList.addAll(audioQueryArrayList);
+			mediaItemsList.addAll(videoQueryArrayList);
+
+			ArrayList<MediaItem> audioQueryArrayList = queryMediaFolder(MediaItemType.AUDIO, projection,
+					selection, selectionArgs, sortOrder);
+			mediaItemsList.addAll(audioQueryArrayList);
 
 			MediaItem[] result = new MediaItem[mediaItemsList.size()];
 			result = mediaItemsList.toArray(result);
 			successCallback.onsuccess(result);
 		} catch (Exception e) {
-			errorCallback.onerror(new DeviceAPIError(DeviceAPIError.UNKNOWN_ERR));
+			errorCallback.onerror(new DeviceAPIError(DeviceAPIError.INVALID_VALUES_ERR));
 		}
+	}
+
+	private String getSelectionFromFilter(AbstractFilter filter) {
+		String selType;// UNION or INTERSECTION i.e. "OR" or "AND"
+		CompositeFilter cFilter;
+		try {
+			cFilter = (CompositeFilter) filter;
+		} catch (Exception e) {
+			Log.w(TAG, e.getMessage());
+			return new String();
+		}
+		selType = cFilter.CompositeFilterType.toUpperCase().equals("UNION") ? " OR " : " AND ";
+		StringBuilder sb = new StringBuilder();
+		for (AbstractFilter aFilter : cFilter.filters) {
+			String currentSelection;
+			try {
+				// If anything fails it is probably the next cast, so I'm not adding selection to sb but move on to the next filter.
+				currentSelection = ((AttributeFilter) aFilter).attributeName;
+				sb.append(currentSelection);
+				sb.append(selType);
+			} catch (Exception e) {
+			}
+		}
+		// The last " OR " or " AND " should be deleted. Here I'm computing the position where it starts so as to avoid returning it.
+		int offset = selType.equals(" OR ") ? 4 : 5;
+		int length = sb.toString().length();
+		// Omit returning last OR or AND.
+		String selection = sb.toString().substring(0, length - offset);
+		return selection;
+	}
+
+	private String[] getSelectionArgsFromFilter(AbstractFilter filter) {
+		CompositeFilter cFilter;
+		try {
+			cFilter = (CompositeFilter) filter;
+		} catch (Exception e) {
+			Log.w(TAG, e.getMessage());
+			return new String[] {};
+		}
+		ArrayList<String> selectionArgs = new ArrayList<String>();
+		for (AbstractFilter aFilter : cFilter.filters) {
+			try {
+				selectionArgs.add((String) ((AttributeFilter) aFilter).matchValue);
+			} catch (Exception e) {
+			}
+		}
+		String[] selectionArgsArr = new String[selectionArgs.size()];
+		return selectionArgs.toArray(selectionArgsArr);
+	}
+
+	private String getSortModeCountOffsetString(SortMode sortMode, Integer count, Integer offset) {
+		StringBuilder sb = new StringBuilder();
+		if (sortMode != null) {
+			// Column to sort by
+			sb.append(" " + sortMode.attributeName);
+			// Sort mode
+			String ascOrDesc = sortMode.order.toUpperCase().equals("DESC") ? " DESC" : " ASC";
+			sb.append(ascOrDesc);
+		}
+		// Limit the nr. of results
+		if (count != null) {
+			sb.append(" limit " + count.intValue());
+		}
+		// Set an offset
+		if (offset != null) {
+			sb.append(" offset " + offset.intValue());
+		}
+		Log.i(TAG, "query string:" + sb.toString());
+		return sb.toString();
 	}
 
 	private ArrayList<MediaItem> queryMediaFolder(MediaItemType mit, String[] projection, String selection,
@@ -274,8 +352,14 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 		}
 		ArrayList<MediaItem> resultList = new ArrayList<MediaItem>();
-		Cursor cursor = androidContext.getContentResolver().query(locationUri, projection, selection,
-				selectionArgs, sortOrder);
+		Cursor cursor = null;
+		try {
+			cursor = androidContext.getContentResolver().query(locationUri, projection, selection,
+					selectionArgs, sortOrder);
+		} catch (Exception e) {
+			Log.w(TAG, e.getCause());
+			return resultList;
+		}
 
 		if (!cursor.moveToFirst()) {
 			return resultList;
@@ -307,16 +391,16 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		SimpleCoordinates sc = new SimpleCoordinates();
 		sc.latitude = cursor.getDouble(cursor.getColumnIndex(MediaStore.Video.Media.LATITUDE));
 		sc.longitude = cursor.getDouble(cursor.getColumnIndex(MediaStore.Video.Media.LONGITUDE));
-		sc.altitude = 0;
+		sc.altitude = 0D;
 		mv.geolocation = sc;
 		mv.album = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.ALBUM));
 		mv.artists = new String[] { cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.ARTIST)) };
 		mv.duration = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.Media.DURATION));
-//		mv.width = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.r)) RESOLUTION has result formatted as XxY
+		// mv.width = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.r)) RESOLUTION has result formatted as XxY
 		mv.width = cursor.getLong(cursor.getColumnIndex("width"));
 		mv.height = cursor.getLong(cursor.getColumnIndex("height"));
-		mv.playedTime = cursor.getInt(cursor.getColumnIndex(MediaStore.Video.Media.BOOKMARK));
-//		mv.playCount = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.Media.));
+		mv.playedTime = (long) cursor.getInt(cursor.getColumnIndex(MediaStore.Video.Media.BOOKMARK));
+		// mv.playCount = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.Media.));
 
 	}
 
@@ -338,7 +422,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		// ma.copyright ????????
 		// ma.bitrate = Compute as described here: http://stackoverflow.com/questions/5140085/how-to-get-sampling-rate-and-frequency-of-music-file-mp3-in-android
 		ma.trackNumber = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.TRACK));
-		ma.duration = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+		ma.duration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
 		// ma.playCount =
 		ma.playedTime = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.BOOKMARK));
 
@@ -356,10 +440,10 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		SimpleCoordinates sc = new SimpleCoordinates();
 		sc.latitude = cursor.getDouble(cursor.getColumnIndex(MediaStore.Images.Media.LATITUDE));
 		sc.longitude = cursor.getDouble(cursor.getColumnIndex(MediaStore.Images.Media.LONGITUDE));
-		sc.altitude = 0;
+		sc.altitude = 0D;
 		mi.geolocation = sc;
-		mi.width = cursor.getLong(cursor.getColumnIndex("width"));
-		mi.height = cursor.getLong(cursor.getColumnIndex("height"));
+		mi.width = (int) cursor.getLong(cursor.getColumnIndex("width"));
+		mi.height = (int) cursor.getLong(cursor.getColumnIndex("height"));
 
 		/**
 		 * From the documentation: The orientation for the image expressed as degrees. Only degrees 0, 90, 180, 270 will work.
