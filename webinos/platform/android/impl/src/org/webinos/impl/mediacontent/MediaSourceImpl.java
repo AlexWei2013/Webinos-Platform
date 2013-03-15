@@ -19,6 +19,7 @@
 package org.webinos.impl.mediacontent;
 
 import java.io.File;
+import java.io.InvalidClassException;
 import java.io.StreamCorruptedException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.UUID;
 
 import org.meshpoint.anode.AndroidContext;
@@ -38,7 +40,10 @@ import org.webinos.api.ErrorCallback;
 import org.webinos.api.SuccessCallback;
 import org.webinos.api.mediacontent.AbstractFilter;
 import org.webinos.api.mediacontent.AttributeFilter;
+import org.webinos.api.mediacontent.AttributeRangeFilter;
 import org.webinos.api.mediacontent.CompositeFilter;
+import org.webinos.api.mediacontent.CompositeFilterType;
+import org.webinos.api.mediacontent.FilterMatchFlag;
 import org.webinos.api.mediacontent.MediaAudio;
 import org.webinos.api.mediacontent.MediaFolder;
 import org.webinos.api.mediacontent.MediaFolderArraySuccessCallback;
@@ -71,6 +76,83 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 
 	private static final String TAG = "org.webinos.impl.MediaContent.MediaSourceImpl";
 	private Context androidContext;
+	private HashMap<String, String> filterMatchFlagToSqlOperatorMapping = new HashMap<String, String>() {
+		{
+			put(FilterMatchFlag.EXACTLY.toString(), " = ");
+			put(FilterMatchFlag.FULLSTRING.toString(), " like ");
+			put(FilterMatchFlag.CONTAINS.toString(), " like ");
+			put(FilterMatchFlag.STARTSWITH.toString(), " like ");
+			put(FilterMatchFlag.ENDSWITH.toString(), " like ");
+			/**
+			 * Separate query for table columns: PRAGMA table_info(tablename); and then go through all of them checking whether the needed attribute(i.e. column name) exists.
+			 * 
+			 * Beware! For now EXISTS is ignored.
+			 */
+			// put(FilterMatchFlag.EXISTS.toString(),"???);
+
+		}
+	};
+
+	private HashMap<String, String> attrNameToImageColumnNameMapping = new HashMap<String, String>() {
+		{
+			put("id", MediaStore.Images.Media._ID);
+			put("title", MediaStore.Images.Media.TITLE);
+			put("itemURI", MediaStore.Images.Media.DATA);
+			put("releaseDate", MediaStore.Images.Media.DATE_TAKEN);
+			put("modifiedDate", MediaStore.Images.Media.DATE_MODIFIED);
+			put("size", MediaStore.Images.Media.SIZE);
+			put("description", MediaStore.Images.Media.DESCRIPTION);
+			put("latitude", MediaStore.Images.Media.LATITUDE);
+			put("longitude", MediaStore.Images.Media.LONGITUDE);
+			// put("width", MediaStore.Images.Media.WIDTH);
+			// put("width", MediaStore.Images.Media.HEIGHT);
+			put("orientation", MediaStore.Images.Media.ORIENTATION);
+		}
+	};
+
+	private HashMap<String, String> attrNameToVideoColumnNameMapping = new HashMap<String, String>() {
+		{
+			put("id", MediaStore.Video.Media._ID);
+			put("title", MediaStore.Video.Media.TITLE);
+			put("itemURI", MediaStore.Video.Media.DATA);
+			put("releaseDate", MediaStore.Video.Media.DATE_TAKEN);
+			put("modifiedDate", MediaStore.Video.Media.DATE_MODIFIED);
+			put("size", MediaStore.Video.Media.SIZE);
+			put("description", MediaStore.Video.Media.DESCRIPTION);
+			put("latitude", MediaStore.Video.Media.LATITUDE);
+			put("longitude", MediaStore.Video.Media.LONGITUDE);
+			put("album", MediaStore.Video.Media.ALBUM);
+			put("artist", MediaStore.Video.Media.ARTIST);
+			put("duration", MediaStore.Video.Media.DURATION);
+			// put("width", MediaStore.Video.Media.WIDTH);
+			// put("width", MediaStore.Video.Media.HEIGHT);
+			put("resolution", MediaStore.Video.Media.RESOLUTION);
+			put("playedTime", MediaStore.Video.Media.BOOKMARK);
+			// put("playedCount", MediaStore.Video.Media.???);
+		}
+	};
+
+	private HashMap<String, String> attrNameToAudioColumnNameMapping = new HashMap<String, String>() {
+		{
+			put("id", MediaStore.Audio.Media._ID);
+			put("title", MediaStore.Audio.Media.TITLE);
+			put("itemURI", MediaStore.Audio.Media.DATA);
+			put("releaseDate", MediaStore.Audio.Media.DATE_ADDED);
+			put("modifiedDate", MediaStore.Audio.Media.DATE_MODIFIED);
+			put("size", MediaStore.Audio.Media.SIZE);
+			put("album", MediaStore.Audio.Media.ALBUM);
+			// put("genre", MediaStore.Audio.Media.???);
+			put("artist", MediaStore.Audio.Media.ARTIST);
+			put("composer", MediaStore.Audio.Media.COMPOSER);
+			put("trackNumber", MediaStore.Audio.Media.TRACK);
+			// put("lyrics", MediaStore.Audio.Media.???);
+			// put("copyright", MediaStore.Audio.Media.???);
+			put("duration", MediaStore.Audio.Media.DURATION);
+			// put("bitrate", MediaStore.Audio.Media.???);
+			// put("playedCount", MediaStore.Audio.Media.???);
+			put("playedTime", MediaStore.Audio.Media.BOOKMARK);
+		}
+	};
 
 	/**
 	 * IModule methods
@@ -210,27 +292,16 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			String folderId, AbstractFilter abstractFilter, SortMode sortMode, Integer count, Integer offset) {
 		try {
 			ArrayList<MediaItem> mediaItemsList = new ArrayList<MediaItem>();
-			String[] projection = {};
-			String selection = "";
-			String[] selectionArgs = {};
-			String sortOrder = "";
 
-			SortMode tempSortMode = new SortMode();
-			// tempSortMode.attributeName = MediaStore.Images.ImageColumns.SIZE;
-			tempSortMode.attributeName = MediaStore.Audio.Media.TRACK;
-			tempSortMode.order = SortModeOrder.DESC.toString();
-			sortOrder = getSortModeCountOffsetString(tempSortMode, null, null);
-
-			// ArrayList<MediaItem> imageQueryArrayList = queryMediaFolder(MediaItemType.IMAGE, projection,
-			// selection, selectionArgs, sortOrder);
+			// ArrayList<MediaItem> imageQueryArrayList = queryMediaFolder(MediaItemType.IMAGE, folderId, abstractFilter, sortMode, count, offset);
 			// mediaItemsList.addAll(imageQueryArrayList);
 
-			ArrayList<MediaItem> videoQueryArrayList = queryMediaFolder(MediaItemType.VIDEO, projection,
-					selection, selectionArgs, sortOrder);
+			ArrayList<MediaItem> videoQueryArrayList = queryMediaFolder(MediaItemType.VIDEO, folderId,
+					abstractFilter, sortMode, count, offset);
 			mediaItemsList.addAll(videoQueryArrayList);
 
-			ArrayList<MediaItem> audioQueryArrayList = queryMediaFolder(MediaItemType.AUDIO, projection,
-					selection, selectionArgs, sortOrder);
+			ArrayList<MediaItem> audioQueryArrayList = queryMediaFolder(MediaItemType.AUDIO, folderId,
+					abstractFilter, sortMode, count, offset);
 			mediaItemsList.addAll(audioQueryArrayList);
 
 			MediaItem[] result = new MediaItem[mediaItemsList.size()];
@@ -241,24 +312,189 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 	}
 
-	private String getSelectionFromFilter(AbstractFilter filter) {
-		String selType;// UNION or INTERSECTION i.e. "OR" or "AND"
-		CompositeFilter cFilter;
-		try {
-			cFilter = (CompositeFilter) filter;
-		} catch (Exception e) {
-			Log.w(TAG, e.getMessage());
-			return new String();
+	private String getSelectionFromFilter(MediaItemType mit, AbstractFilter filter)
+			throws InvalidClassException {
+		if (filter == null)
+			return null;
+
+		String selection = null;
+		Class filterClass = filter.getClass();
+		// Ugly if-else but switch doesn't work like in C#
+		if (filterClass.equals(CompositeFilter.class)) {
+			selection = getSelectionFromCompositeFilter(mit, (CompositeFilter) filter);
+		} else {
+			if (filterClass.equals(AttributeFilter.class)) {
+				selection = getSelectionFromAttributeFilter(mit, (AttributeFilter) filter);
+			} else {
+				if (filterClass.equals(AttributeRangeFilter.class)) {
+					selection = getSelectionFromAttributeRangeFilter(mit, (AttributeRangeFilter) filter);
+				} else {
+					throw new InvalidClassException(filterClass.getName() + " is not supported!");
+				}
+			}
 		}
+
+		return selection;
+	}
+
+	private String getSelectionFromAttributeRangeFilter(MediaItemType mit, AttributeRangeFilter arFilter) {
+		if (arFilter == null || arFilter.attributeName == null || arFilter.attributeName.isEmpty())
+			return null;
+
+		// Determine the correct column name based on the MediaItemType
+		String colName = null;
+		switch (mit) {
+		case AUDIO: {
+			colName = attrNameToAudioColumnNameMapping.get((arFilter).attributeName); break;
+		}
+		case IMAGE: {
+			colName = attrNameToImageColumnNameMapping.get((arFilter).attributeName); break;
+		}
+		case VIDEO: {
+			colName = attrNameToVideoColumnNameMapping.get((arFilter).attributeName); break;
+		}
+		default: {
+			break;
+		}
+		}
+		// If no valid column name found just return
+		if (colName == null || colName.isEmpty()) {
+			return null;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		String minVal = null, maxVal = null;
+		// Special check for Date objects, in the SQLite DB dates are stored like seconds since the epoch.
+		// To make values compatible divide by 1000 (see getTime() documentation);
+		if (arFilter.attributeName.contains("date")) {
+			if (arFilter.initialValue != null) {
+				minVal = String.valueOf(((Date) arFilter.initialValue).getTime() / 1000);
+			}
+			if (arFilter.endValue != null) {
+				maxVal = String.valueOf(((Date) arFilter.endValue).getTime() / 1000);
+			}
+		} else {
+			if (arFilter.initialValue != null) {
+				minVal = String.valueOf(arFilter.initialValue);
+			}
+			if (arFilter.endValue != null) {
+				maxVal = String.valueOf(arFilter.endValue);
+			}
+		}
+
+		if (minVal != null) {
+			sb.append(colName + " >= " + minVal);
+		}
+		if (maxVal != null) {
+			// If lower bound is set we need and "AND"
+			if (minVal != null) {
+				sb.append(" AND " + colName + " <= " + maxVal);
+			} else {
+				// Otherwise we don't
+				sb.append(colName + " <= " + maxVal);
+			}
+		}
+
+		if (minVal == null && maxVal == null) {
+			return null;
+		} else {
+			return sb.toString();
+		}
+	}
+
+	private String getSelectionFromAttributeFilter(MediaItemType mit, AttributeFilter aFilter) {
+		if (aFilter == null || aFilter.attributeName == null || aFilter.attributeName.isEmpty())
+			return null;
+
+		String currentSelection = null;
+		switch (mit) {
+		case AUDIO: {
+			currentSelection = attrNameToAudioColumnNameMapping
+					.get(((AttributeFilter) aFilter).attributeName);
+		}
+		case IMAGE: {
+			currentSelection = attrNameToImageColumnNameMapping
+					.get(((AttributeFilter) aFilter).attributeName);
+		}
+		case VIDEO: {
+			currentSelection = attrNameToVideoColumnNameMapping
+					.get(((AttributeFilter) aFilter).attributeName);
+		}
+		default: {
+			break;
+		}
+		}
+
+		// If attribute name was not found skip this filter
+		if (currentSelection == null || currentSelection.isEmpty())
+			return null;
+
+		StringBuilder sb = new StringBuilder();
+		try {
+			String matchFlag = ((AttributeFilter) aFilter).filterMatchFlag;
+			if (!matchFlag.toUpperCase().equals("EXISTS")) {
+				// Column name
+				sb.append(currentSelection);
+				// Operator "=" or "like"
+				String operator = filterMatchFlagToSqlOperatorMapping.get(matchFlag);
+				sb.append(operator);
+				// Placeholder for actual value is "?"
+				sb.append("?");
+			}
+		} catch (Exception e) {
+			Log.i(TAG, "Exception occured while getting SQLite selection from an attributeFilter obj.");
+			sb = null;
+		}
+
+		return sb.toString();
+	}
+
+	private String getSelectionFromCompositeFilter(MediaItemType mit, CompositeFilter cFilter) {
+		if (cFilter == null || cFilter.filters == null || cFilter.filters.length == 0) {
+			return null;
+		}
+
+		String selType;// UNION or INTERSECTION i.e. "OR" or "AND"
 		selType = cFilter.CompositeFilterType.toUpperCase().equals("UNION") ? " OR " : " AND ";
+
 		StringBuilder sb = new StringBuilder();
 		for (AbstractFilter aFilter : cFilter.filters) {
-			String currentSelection;
+			String currentSelection = null;
 			try {
 				// If anything fails it is probably the next cast, so I'm not adding selection to sb but move on to the next filter.
-				currentSelection = ((AttributeFilter) aFilter).attributeName;
-				sb.append(currentSelection);
-				sb.append(selType);
+				switch (mit) {
+				case AUDIO: {
+					currentSelection = attrNameToAudioColumnNameMapping
+							.get(((AttributeFilter) aFilter).attributeName);
+				}
+				case IMAGE: {
+					currentSelection = attrNameToImageColumnNameMapping
+							.get(((AttributeFilter) aFilter).attributeName);
+				}
+				case VIDEO: {
+					currentSelection = attrNameToVideoColumnNameMapping
+							.get(((AttributeFilter) aFilter).attributeName);
+				}
+				default: {
+					break;
+				}
+				}
+				// If attribute name was not found skip this filter
+				if (currentSelection == null || currentSelection.isEmpty())
+					break;
+
+				String matchFlag = ((AttributeFilter) aFilter).filterMatchFlag;
+				if (!matchFlag.toUpperCase().equals("EXISTS")) {
+					// Column name
+					sb.append(currentSelection);
+					// Operator "=" or "like"
+					String operator = filterMatchFlagToSqlOperatorMapping.get(matchFlag);
+					sb.append(operator);
+					// Placeholder for actual value is "?"
+					sb.append("?");
+					// " OR " or " AND "
+					sb.append(selType);
+				}
 			} catch (Exception e) {
 			}
 		}
@@ -267,7 +503,9 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		int length = sb.toString().length();
 		// Omit returning last OR or AND.
 		String selection = sb.toString().substring(0, length - offset);
+		Log.i(TAG, "Selection from filter: " + selection);
 		return selection;
+
 	}
 
 	private String[] getSelectionArgsFromFilter(AbstractFilter filter) {
@@ -281,7 +519,9 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		ArrayList<String> selectionArgs = new ArrayList<String>();
 		for (AbstractFilter aFilter : cFilter.filters) {
 			try {
-				selectionArgs.add((String) ((AttributeFilter) aFilter).matchValue);
+				// selectionArgs.add((String) ((AttributeFilter) aFilter).matchValue);
+				selectionArgs.add(getSelArgFromAttrFilter((AttributeFilter) aFilter));
+				// Log.i(TAG, "Selection arg: "+selectionArgs.get(selectionArgs.size()));
 			} catch (Exception e) {
 			}
 		}
@@ -289,15 +529,84 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		return selectionArgs.toArray(selectionArgsArr);
 	}
 
-	private String getSortModeCountOffsetString(SortMode sortMode, Integer count, Integer offset) {
-		StringBuilder sb = new StringBuilder();
-		if (sortMode != null) {
-			// Column to sort by
-			sb.append(" " + sortMode.attributeName);
-			// Sort mode
-			String ascOrDesc = sortMode.order.toUpperCase().equals("DESC") ? " DESC" : " ASC";
-			sb.append(ascOrDesc);
+	private String getSelArgFromAttrFilter(AttributeFilter aFilter) {
+
+		if (aFilter == null) {
+			return null;
 		}
+		StringBuilder sb = new StringBuilder();
+		try {
+			switch (FilterMatchFlag.valueOf(aFilter.filterMatchFlag)) {
+			case EXACTLY: {
+				sb.append(aFilter.matchValue);
+				break;
+			}
+			case FULLSTRING: {
+				sb.append(aFilter.matchValue);
+				break;
+			}
+			case CONTAINS: {
+				sb.append("%");
+				sb.append(aFilter.matchValue);
+				sb.append("%");
+				break;
+			}
+			case STARTSWITH: {
+				sb.append("%");
+				sb.append(aFilter.matchValue);
+				break;
+			}
+			case ENDSWITH: {
+				sb.append(aFilter.matchValue);
+				sb.append("%");
+				break;
+			}
+			default: {
+				sb.append(aFilter.matchValue);
+				break;
+			}
+			}
+		} catch (Exception e) {
+			Log.i(TAG, "Error in SelArgFromFilter: " + e.toString());
+			sb.append(aFilter.matchValue);
+		}
+
+		Log.i(TAG, "SelArg: " + sb.toString());
+		return sb.toString();
+
+	}
+
+	private String getSortModeCountOffsetString(MediaItemType mit, SortMode sortMode, Integer count,
+			Integer offset) {
+		if (sortMode == null) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+
+		// Determine the column name to sort by
+		String colName = null;
+		switch (mit) {
+		case IMAGE: {
+			colName = attrNameToImageColumnNameMapping.get(sortMode.attributeName);
+			break;
+		}
+		case AUDIO: {
+			colName = attrNameToAudioColumnNameMapping.get(sortMode.attributeName);
+			break;
+		}
+		case VIDEO: {
+			colName = attrNameToVideoColumnNameMapping.get(sortMode.attributeName);
+			break;
+		}
+		}
+		if (colName != null && !colName.isEmpty()) {
+			sb.append(" " + colName);
+		}
+
+		// Sort mode
+		String ascOrDesc = sortMode.order.toUpperCase().equals("DESC") ? " DESC" : " ASC";
+		sb.append(ascOrDesc);
+
 		// Limit the nr. of results
 		if (count != null) {
 			sb.append(" limit " + count.intValue());
@@ -310,10 +619,11 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		return sb.toString();
 	}
 
-	private ArrayList<MediaItem> queryMediaFolder(MediaItemType mit, String[] projection, String selection,
-			String[] selectionArgs, String sortOrder) throws IllegalArgumentException,
-			IllegalAccessException, InvocationTargetException, InstantiationException, SecurityException,
-			NoSuchMethodException {
+	private ArrayList<MediaItem> queryMediaFolder(MediaItemType mit, String folderId,
+			AbstractFilter abstractFilter, SortMode sortMode, Integer count, Integer offset)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException,
+			InstantiationException, SecurityException, NoSuchMethodException {
+
 		Uri locationUri;
 		Class concreteMediaItemClass;
 		Method concretePopulateMediaItemMethod;
@@ -351,6 +661,48 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			break;
 		}
 		}
+
+		String[] projection = {};
+		String selection = "";
+		String[] selectionArgs = {};
+		String sortOrder = "";
+
+		AttributeFilter af = new AttributeFilter();
+		af.attributeName = MediaStore.MediaColumns.TITLE;
+		af.filterMatchFlag = FilterMatchFlag.CONTAINS.toString();
+		af.matchValue = "e";
+
+		AttributeFilter af2 = new AttributeFilter();
+		af2.attributeName = MediaStore.MediaColumns.TITLE;
+		af2.filterMatchFlag = FilterMatchFlag.CONTAINS.toString();
+		af2.matchValue = "t";
+
+		CompositeFilter cf = new CompositeFilter();
+		cf.CompositeFilterType = CompositeFilterType.INTERSECTION.toString();
+		cf.filters = new AbstractFilter[] { af };
+		
+		AttributeRangeFilter ar = new AttributeRangeFilter();
+		ar.attributeName = "size";
+		ar.initialValue = 50000;
+		ar.endValue = 500000;
+
+		abstractFilter = ar;
+
+		try {
+			selection = getSelectionFromFilter(mit, abstractFilter);
+			selectionArgs = getSelectionArgsFromFilter(abstractFilter);
+		} catch (Exception e) {
+			selection = null;
+			selectionArgs = null;
+		}
+
+		SortMode tempSortMode = new SortMode();
+		// tempSortMode.attributeName = MediaStore.Images.ImageColumns.SIZE;
+		// tempSortMode.attributeName = MediaStore.Audio.Media.TRACK;
+		tempSortMode.attributeName = "modifiedDate";
+		tempSortMode.order = SortModeOrder.DESC.toString();
+		sortOrder = getSortModeCountOffsetString(mit, tempSortMode, null, null);
+
 		ArrayList<MediaItem> resultList = new ArrayList<MediaItem>();
 		Cursor cursor = null;
 		try {
