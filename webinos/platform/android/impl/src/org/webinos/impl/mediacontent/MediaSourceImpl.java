@@ -162,7 +162,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	@Override
 	public Object startModule(IModuleContext ctx) {
 		// TODO Auto-generated method stub
-//		populateFolderIdToPathMapping();
+		// populateFolderIdToPathMapping();
 		this.androidContext = ((AndroidContext) ctx).getAndroidContext();
 		populateFolderIdToPathMapping();
 		return this;
@@ -238,22 +238,22 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
 								.getName().getBytes()).toString(), Environment
 						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
-				
+
 				put(UUID.nameUUIDFromBytes(
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getName()
 								.getBytes()).toString(),
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getPath());
-				
+
 				put(UUID.nameUUIDFromBytes(
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getName()
 								.getBytes()).toString(),
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath());
-				
+
 				put(UUID.nameUUIDFromBytes(
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getName()
 								.getBytes()).toString(),
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getPath());
-				
+
 				put(UUID.nameUUIDFromBytes(
 						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 								.getName().getBytes()).toString(), Environment
@@ -288,7 +288,9 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 		mf.folderURI = file.getPath();
 		mf.title = file.getName();
-		mf.storageType = MediaFolderStorageType.INTERNAL.toString();
+		// TODO determine is on internal or external storage, but media is usually on external storage. If no microSD card is supported, 
+		//Android still treats media files as being on external storage.
+		mf.storageType = MediaFolderStorageType.EXTERNAL.toString();
 		// Careful
 		String d = new String().valueOf(file.lastModified());
 		long newFileDateMillis = (Long.parseLong(d) / 1000) * 1000;
@@ -782,7 +784,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		cf.filters = new AbstractFilter[] { af, ar };
 
 		abstractFilter = cf;
-		folderId = "c3418983-f961-37fb-9950-49c67426dc08"; // pics folder
+//		folderId = "c3418983-f961-37fb-9950-49c67426dc08"; // pics folder
 
 		try {
 			selection = getSelectionFromFilter(mit, abstractFilter, folderId);
@@ -795,7 +797,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		SortMode tempSortMode = new SortMode();
 		tempSortMode.attributeName = "size";
 		tempSortMode.order = SortModeOrder.DESC.toString();
-		sortOrder = getSortModeCountOffsetString(mit, tempSortMode, null, null);
+		sortOrder = getSortModeCountOffsetString(mit, tempSortMode, count, offset);
 		// end For testing
 
 		ArrayList<MediaItem> resultList = new ArrayList<MediaItem>();
@@ -811,14 +813,15 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		if (!cursor.moveToFirst()) {
 			return resultList;
 		}
-
-		while (cursor.moveToNext()) {
+		// Carefull! - in a while( cursor.moveToNext() ) loop you skip the first result.
+		do {
 
 			MediaItem mi = (MediaItem) concreteMediaItemClass.newInstance();
 			// populateMediaImageFromCursor(mi, cursor);
 			concretePopulateMediaItemMethod.invoke(this, mi, cursor);
 			resultList.add(mi);
-		}
+		} while (cursor.moveToNext());
+
 
 		cursor.close();
 		cursor = null;
