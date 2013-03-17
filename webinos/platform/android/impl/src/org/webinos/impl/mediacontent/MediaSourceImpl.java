@@ -154,13 +154,17 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 	};
 
+	private HashMap<String, String> folderIDtoPathMapping = null;
+
 	/**
 	 * IModule methods
 	 */
 	@Override
 	public Object startModule(IModuleContext ctx) {
 		// TODO Auto-generated method stub
+//		populateFolderIdToPathMapping();
 		this.androidContext = ((AndroidContext) ctx).getAndroidContext();
+		populateFolderIdToPathMapping();
 		return this;
 	}
 
@@ -226,6 +230,38 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	 * Private Methods
 	 */
 
+	private void populateFolderIdToPathMapping() {
+		folderIDtoPathMapping = new HashMap<String, String>() {
+
+			{
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+								.getName().getBytes()).toString(), Environment
+						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
+				
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getName()
+								.getBytes()).toString(),
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getPath());
+				
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getName()
+								.getBytes()).toString(),
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath());
+				
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getName()
+								.getBytes()).toString(),
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getPath());
+				
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+								.getName().getBytes()).toString(), Environment
+						.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath());
+			}
+		};
+	}
+
 	/**
 	 * 
 	 * @param file
@@ -258,6 +294,10 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		long newFileDateMillis = (Long.parseLong(d) / 1000) * 1000;
 		mf.modifiedDate = new Date(newFileDateMillis);
 
+		// Add the folder ID and path to the mapping. This is used in searches when a folder ID is provided.
+		if (folderIDtoPathMapping != null)
+			folderIDtoPathMapping.put(mf.id, mf.folderURI);
+
 		Log.i(TAG, "MediaFolder: " + mf.title + " @:" + mf.folderURI + " ID: " + mf.id + " on:"
 				+ mf.modifiedDate.toLocaleString() + " Type: " + mf.storageType);
 		return mf;
@@ -269,6 +309,8 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
 			mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC));
 			mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES));
+			mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM));
+			mediaFolders.add(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
 
 			MediaFolder[] resultArray = new MediaFolder[mediaFolders.size()];
 			for (int i = 0; i < mediaFolders.size(); i++) {
@@ -293,8 +335,9 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		try {
 			ArrayList<MediaItem> mediaItemsList = new ArrayList<MediaItem>();
 
-			// ArrayList<MediaItem> imageQueryArrayList = queryMediaFolder(MediaItemType.IMAGE, folderId, abstractFilter, sortMode, count, offset);
-			// mediaItemsList.addAll(imageQueryArrayList);
+			ArrayList<MediaItem> imageQueryArrayList = queryMediaFolder(MediaItemType.IMAGE, folderId,
+					abstractFilter, sortMode, count, offset);
+			mediaItemsList.addAll(imageQueryArrayList);
 
 			ArrayList<MediaItem> videoQueryArrayList = queryMediaFolder(MediaItemType.VIDEO, folderId,
 					abstractFilter, sortMode, count, offset);
@@ -312,29 +355,92 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 	}
 
-	private String getSelectionFromFilter(MediaItemType mit, AbstractFilter filter)
+	private String getSelectionFromFilter(MediaItemType mit, AbstractFilter filter, String folderID)
 			throws InvalidClassException {
 		if (filter == null)
 			return null;
 
-		String selection = null;
+		String locationSelection = getSelectionFromFolderID(mit, folderID);
+
+		String attributesSelection = null;
 		Class filterClass = filter.getClass();
 		// Ugly if-else but switch doesn't work like in C#
 		if (filterClass.equals(CompositeFilter.class)) {
-			selection = getSelectionFromCompositeFilter(mit, (CompositeFilter) filter);
+			attributesSelection = getSelectionFromCompositeFilter(mit, (CompositeFilter) filter);
 		} else {
 			if (filterClass.equals(AttributeFilter.class)) {
-				selection = getSelectionFromAttributeFilter(mit, (AttributeFilter) filter);
+				attributesSelection = getSelectionFromAttributeFilter(mit, (AttributeFilter) filter);
 			} else {
 				if (filterClass.equals(AttributeRangeFilter.class)) {
-					selection = getSelectionFromAttributeRangeFilter(mit, (AttributeRangeFilter) filter);
+					attributesSelection = getSelectionFromAttributeRangeFilter(mit,
+							(AttributeRangeFilter) filter);
 				} else {
 					throw new InvalidClassException(filterClass.getName() + " is not supported!");
 				}
 			}
 		}
+		StringBuilder selection = new StringBuilder();
+		if (locationSelection != null) {
+			selection.append(locationSelection);
+			if (attributesSelection != null) {
+				selection.append(" AND ");
+				selection.append(attributesSelection);
+			}
+		} else {
+			if (attributesSelection != null) {
+				selection.append(attributesSelection);
+			}
+		}
 
-		return selection;
+		Log.i(TAG, "Selection: " + selection.toString());
+		if (selection.length() <= 0)
+			return null;
+
+		return selection.toString();
+	}
+
+	private String getSelectionFromFolderID(MediaItemType mit, String folderID) {
+		if (folderID == null || folderID.isEmpty())
+			return null;
+
+		String realPath = folderIDtoPathMapping.get(folderID);
+		if (realPath == null)
+			return null;
+
+		String pathColName = null;
+
+		switch (mit) {
+		case AUDIO: {
+			pathColName = attrNameToAudioColumnNameMapping.get("itemURI");
+			break;
+		}
+		case IMAGE: {
+			pathColName = attrNameToImageColumnNameMapping.get("itemURI");
+			break;
+		}
+		case VIDEO: {
+			pathColName = attrNameToVideoColumnNameMapping.get("itemURI");
+			break;
+		}
+		default: {
+			return null;
+		}
+		}
+		if (pathColName == null || pathColName.isEmpty())
+			return null;
+
+		// Example: ... WHERE _data like /storage/emulated/0/Music% AND ...
+		StringBuilder sb = new StringBuilder();
+		sb.append(pathColName);
+		sb.append(" like ");
+		sb.append("'");
+		sb.append(realPath);
+		sb.append("%");
+		sb.append("'");
+		// " AND " is added in the calling method only if necessary.
+		// sb.append(" AND ");
+
+		return sb.toString();
 	}
 
 	private String getSelectionFromAttributeRangeFilter(MediaItemType mit, AttributeRangeFilter arFilter) {
@@ -345,13 +451,16 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		String colName = null;
 		switch (mit) {
 		case AUDIO: {
-			colName = attrNameToAudioColumnNameMapping.get((arFilter).attributeName); break;
+			colName = attrNameToAudioColumnNameMapping.get((arFilter).attributeName);
+			break;
 		}
 		case IMAGE: {
-			colName = attrNameToImageColumnNameMapping.get((arFilter).attributeName); break;
+			colName = attrNameToImageColumnNameMapping.get((arFilter).attributeName);
+			break;
 		}
 		case VIDEO: {
-			colName = attrNameToVideoColumnNameMapping.get((arFilter).attributeName); break;
+			colName = attrNameToVideoColumnNameMapping.get((arFilter).attributeName);
+			break;
 		}
 		default: {
 			break;
@@ -365,7 +474,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		StringBuilder sb = new StringBuilder();
 		String minVal = null, maxVal = null;
 		// Special check for Date objects, in the SQLite DB dates are stored like seconds since the epoch.
-		// To make values compatible divide by 1000 (see getTime() documentation);
+		// To make values compatible, divide by 1000 (see getTime() documentation);
 		if (arFilter.attributeName.contains("date")) {
 			if (arFilter.initialValue != null) {
 				minVal = String.valueOf(((Date) arFilter.initialValue).getTime() / 1000);
@@ -398,6 +507,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		if (minVal == null && maxVal == null) {
 			return null;
 		} else {
+			// Log.i(TAG, "Attribute range selection: " + sb.toString());
 			return sb.toString();
 		}
 	}
@@ -406,19 +516,16 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		if (aFilter == null || aFilter.attributeName == null || aFilter.attributeName.isEmpty())
 			return null;
 
-		String currentSelection = null;
+		String columnName = null;
 		switch (mit) {
 		case AUDIO: {
-			currentSelection = attrNameToAudioColumnNameMapping
-					.get(((AttributeFilter) aFilter).attributeName);
+			columnName = attrNameToAudioColumnNameMapping.get(((AttributeFilter) aFilter).attributeName);
 		}
 		case IMAGE: {
-			currentSelection = attrNameToImageColumnNameMapping
-					.get(((AttributeFilter) aFilter).attributeName);
+			columnName = attrNameToImageColumnNameMapping.get(((AttributeFilter) aFilter).attributeName);
 		}
 		case VIDEO: {
-			currentSelection = attrNameToVideoColumnNameMapping
-					.get(((AttributeFilter) aFilter).attributeName);
+			columnName = attrNameToVideoColumnNameMapping.get(((AttributeFilter) aFilter).attributeName);
 		}
 		default: {
 			break;
@@ -426,20 +533,22 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 
 		// If attribute name was not found skip this filter
-		if (currentSelection == null || currentSelection.isEmpty())
+		if (columnName == null || columnName.isEmpty())
 			return null;
 
 		StringBuilder sb = new StringBuilder();
 		try {
-			String matchFlag = ((AttributeFilter) aFilter).filterMatchFlag;
+			String matchFlag = aFilter.filterMatchFlag;
 			if (!matchFlag.toUpperCase().equals("EXISTS")) {
 				// Column name
-				sb.append(currentSelection);
+				sb.append(columnName);
 				// Operator "=" or "like"
 				String operator = filterMatchFlagToSqlOperatorMapping.get(matchFlag);
 				sb.append(operator);
 				// Placeholder for actual value is "?"
 				sb.append("?");
+			} else {
+				return null;
 			}
 		} catch (Exception e) {
 			Log.i(TAG, "Exception occured while getting SQLite selection from an attributeFilter obj.");
@@ -460,50 +569,35 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		StringBuilder sb = new StringBuilder();
 		for (AbstractFilter aFilter : cFilter.filters) {
 			String currentSelection = null;
-			try {
-				// If anything fails it is probably the next cast, so I'm not adding selection to sb but move on to the next filter.
-				switch (mit) {
-				case AUDIO: {
-					currentSelection = attrNameToAudioColumnNameMapping
-							.get(((AttributeFilter) aFilter).attributeName);
-				}
-				case IMAGE: {
-					currentSelection = attrNameToImageColumnNameMapping
-							.get(((AttributeFilter) aFilter).attributeName);
-				}
-				case VIDEO: {
-					currentSelection = attrNameToVideoColumnNameMapping
-							.get(((AttributeFilter) aFilter).attributeName);
-				}
-				default: {
-					break;
-				}
-				}
-				// If attribute name was not found skip this filter
-				if (currentSelection == null || currentSelection.isEmpty())
-					break;
 
-				String matchFlag = ((AttributeFilter) aFilter).filterMatchFlag;
-				if (!matchFlag.toUpperCase().equals("EXISTS")) {
-					// Column name
+			if (aFilter.getClass().equals(AttributeFilter.class)) {
+				currentSelection = getSelectionFromAttributeFilter(mit, (AttributeFilter) aFilter);
+				if (currentSelection != null) {
 					sb.append(currentSelection);
-					// Operator "=" or "like"
-					String operator = filterMatchFlagToSqlOperatorMapping.get(matchFlag);
-					sb.append(operator);
-					// Placeholder for actual value is "?"
-					sb.append("?");
-					// " OR " or " AND "
 					sb.append(selType);
 				}
-			} catch (Exception e) {
+			} else {
+				if (aFilter.getClass().equals(AttributeRangeFilter.class)) {
+					currentSelection = getSelectionFromAttributeRangeFilter(mit,
+							(AttributeRangeFilter) aFilter);
+					if (currentSelection != null) {
+						sb.append(currentSelection);
+						sb.append(selType);
+					}
+				}
 			}
 		}
-		// The last " OR " or " AND " should be deleted. Here I'm computing the position where it starts so as to avoid returning it.
+		// If the composite filter didn't contain any valid filter, return null.
+		if (sb.toString().length() <= 0) {
+			return null;
+		}
+		// If the composite filter contained at least one valid filter, the last " OR " or " AND " should be deleted.
+		// Here I'm computing the position where it starts so as to avoid it.
 		int offset = selType.equals(" OR ") ? 4 : 5;
 		int length = sb.toString().length();
 		// Omit returning last OR or AND.
-		String selection = sb.toString().substring(0, length - offset);
-		Log.i(TAG, "Selection from filter: " + selection);
+		String selection = sb.toString().substring(0, length - offset); // TODO make sure (length - offset) > 0
+		// Log.i(TAG, "Selection from composite filter: " + selection);
 		return selection;
 
 	}
@@ -571,7 +665,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			sb.append(aFilter.matchValue);
 		}
 
-		Log.i(TAG, "SelArg: " + sb.toString());
+		// Log.i(TAG, "SelArg: " + sb.toString());
 		return sb.toString();
 
 	}
@@ -615,7 +709,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		if (offset != null) {
 			sb.append(" offset " + offset.intValue());
 		}
-		Log.i(TAG, "query string:" + sb.toString());
+		Log.i(TAG, "Sort mode, count and offset:" + sb.toString());
 		return sb.toString();
 	}
 
@@ -667,29 +761,31 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		String[] selectionArgs = {};
 		String sortOrder = "";
 
+		// For testing
 		AttributeFilter af = new AttributeFilter();
 		af.attributeName = MediaStore.MediaColumns.TITLE;
 		af.filterMatchFlag = FilterMatchFlag.CONTAINS.toString();
-		af.matchValue = "e";
+		af.matchValue = "img";
 
 		AttributeFilter af2 = new AttributeFilter();
 		af2.attributeName = MediaStore.MediaColumns.TITLE;
 		af2.filterMatchFlag = FilterMatchFlag.CONTAINS.toString();
 		af2.matchValue = "t";
 
-		CompositeFilter cf = new CompositeFilter();
-		cf.CompositeFilterType = CompositeFilterType.INTERSECTION.toString();
-		cf.filters = new AbstractFilter[] { af };
-		
 		AttributeRangeFilter ar = new AttributeRangeFilter();
 		ar.attributeName = "size";
-		ar.initialValue = 50000;
-		ar.endValue = 500000;
+		ar.initialValue = 200000;
+		ar.endValue = 4096000;
 
-		abstractFilter = ar;
+		CompositeFilter cf = new CompositeFilter();
+		cf.CompositeFilterType = CompositeFilterType.INTERSECTION.toString();
+		cf.filters = new AbstractFilter[] { af, ar };
+
+		abstractFilter = cf;
+		folderId = "c3418983-f961-37fb-9950-49c67426dc08"; // pics folder
 
 		try {
-			selection = getSelectionFromFilter(mit, abstractFilter);
+			selection = getSelectionFromFilter(mit, abstractFilter, folderId);
 			selectionArgs = getSelectionArgsFromFilter(abstractFilter);
 		} catch (Exception e) {
 			selection = null;
@@ -697,11 +793,10 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 
 		SortMode tempSortMode = new SortMode();
-		// tempSortMode.attributeName = MediaStore.Images.ImageColumns.SIZE;
-		// tempSortMode.attributeName = MediaStore.Audio.Media.TRACK;
-		tempSortMode.attributeName = "modifiedDate";
+		tempSortMode.attributeName = "size";
 		tempSortMode.order = SortModeOrder.DESC.toString();
 		sortOrder = getSortModeCountOffsetString(mit, tempSortMode, null, null);
+		// end For testing
 
 		ArrayList<MediaItem> resultList = new ArrayList<MediaItem>();
 		Cursor cursor = null;
