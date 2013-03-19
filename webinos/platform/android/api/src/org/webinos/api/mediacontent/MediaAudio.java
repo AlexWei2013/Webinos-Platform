@@ -9,6 +9,11 @@ import org.meshpoint.anode.idl.Dictionary;
  */
 public class MediaAudio extends MediaItem implements Dictionary{
 
+
+	public String[] editableAttributes = new String[] { "title", "album", "artists", "composers",
+														"trackNumber", "playedTime" };
+	
+	
 	public String album;
 	public String[] genres;
 	public String[] artists;

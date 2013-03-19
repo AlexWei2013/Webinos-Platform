@@ -8,6 +8,8 @@ import org.meshpoint.anode.idl.Dictionary;
  * 
  */
 public class MediaImage extends MediaItem implements Dictionary {
+	
+	public String[] editableAttributes = new String[]{"title", "description", "geolocation", "orientation"};
 
 	/**
 	 * The geographical location where the image has been made.
@@ -18,6 +20,8 @@ public class MediaImage extends MediaItem implements Dictionary {
 
 	/**
 	 * Information about image orientation.
+	 * 
+	 * Values: NORMAL, FLIP_HORIZONTAL, ROTATE_180, FLIP_VERTICAL, TRANSPOSE, ROTATE_90, TRANSVERSE, ROTATE_270.
 	 */
 	public String orientation;
 }

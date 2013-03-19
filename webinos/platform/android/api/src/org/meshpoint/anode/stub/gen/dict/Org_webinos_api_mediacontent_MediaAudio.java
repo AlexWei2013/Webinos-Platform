@@ -4,7 +4,7 @@ package org.meshpoint.anode.stub.gen.dict;
 
 public class Org_webinos_api_mediacontent_MediaAudio {
 
-	private static Object[] __args = new Object[11];
+	private static Object[] __args = new Object[12];
 
 	public static Object[] __getArgs() { return __args; }
 
@@ -15,11 +15,12 @@ public class Org_webinos_api_mediacontent_MediaAudio {
 		ob.composers = (String[])vals[3];
 		ob.copyright = (String)vals[4];
 		ob.duration = (Long)vals[5];
-		ob.genres = (String[])vals[6];
-		ob.lyrics = (org.webinos.api.mediacontent.MediaLyrics)vals[7];
-		ob.playCount = (Long)vals[8];
-		ob.playedTime = (Long)vals[9];
-		ob.trackNumber = (Integer)vals[10];
+		ob.editableAttributes = (String[])vals[6];
+		ob.genres = (String[])vals[7];
+		ob.lyrics = (org.webinos.api.mediacontent.MediaLyrics)vals[8];
+		ob.playCount = (Long)vals[9];
+		ob.playedTime = (Long)vals[10];
+		ob.trackNumber = (Integer)vals[11];
 	}
 
 	public static Object[] __export(org.webinos.api.mediacontent.MediaAudio ob) {
@@ -29,11 +30,12 @@ public class Org_webinos_api_mediacontent_MediaAudio {
 		__args[3] = ob.composers;
 		__args[4] = ob.copyright;
 		__args[5] = ob.duration;
-		__args[6] = ob.genres;
-		__args[7] = ob.lyrics;
-		__args[8] = ob.playCount;
-		__args[9] = ob.playedTime;
-		__args[10] = ob.trackNumber;
+		__args[6] = ob.editableAttributes;
+		__args[7] = ob.genres;
+		__args[8] = ob.lyrics;
+		__args[9] = ob.playCount;
+		__args[10] = ob.playedTime;
+		__args[11] = ob.trackNumber;
 		return __args;
 	}
 

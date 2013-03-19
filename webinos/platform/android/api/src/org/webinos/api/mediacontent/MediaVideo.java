@@ -9,8 +9,14 @@ import org.meshpoint.anode.idl.Dictionary;
  */
 public class MediaVideo extends MediaItem implements Dictionary {
 
+	// inherited, but ...
+	public String[] editableAttributes = new String[]{"title", "description", "geolocation", "playedTime", "album", "artists"};
+	
+	
 	/**
 	 * The geographical location where the video was made.
+	 * 
+	 * Has three values (latitude, longitude, altitude) of type Double(nullable).
 	 */
 	public SimpleCoordinates geolocation;
 	public String album;

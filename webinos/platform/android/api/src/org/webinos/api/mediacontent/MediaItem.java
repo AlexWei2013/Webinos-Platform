@@ -5,7 +5,8 @@ import java.util.Date;
 import org.meshpoint.anode.idl.Dictionary;
 
 public class MediaItem implements Dictionary{
-	public String[] editableAttributes;
+	// An array of attributes that can be changed and persisted to storage
+	public String[] editableAttributes = new String[]{"title", "description", "rating"};
 	public String id;
 	/**
 	 * Use the MediaItemType enum to choose a type and then call its toString() method
@@ -22,3 +23,5 @@ public class MediaItem implements Dictionary{
 	public Double rating;
 
 }
+
+
