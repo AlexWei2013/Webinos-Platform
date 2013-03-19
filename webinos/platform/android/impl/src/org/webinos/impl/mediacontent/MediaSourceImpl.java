@@ -62,7 +62,10 @@ import org.webinos.api.mediacontent.SimpleCoordinates;
 import org.webinos.api.mediacontent.SortMode;
 import org.webinos.api.mediacontent.SortModeOrder;
 
+import com.google.zxing.common.PerspectiveTransform;
+
 import android.R.string;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -183,7 +186,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	@Override
 	public void updateItem(MediaItem item) {
 		// TODO Auto-generated method stub
-
+		presistMediaItem(item);
 	}
 
 	@Override
@@ -207,6 +210,22 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		 * Thread current = Thread.currentThread();
 		 */
 
+		// damn HTML, makes me call persisMediaItem here.
+		MediaImage mi = new MediaImage();
+		mi.itemURI = "/storage/emulated/0/DCIM/Camera/IMG_20130304_193027.jpg";
+		mi.id = "504";
+		SimpleCoordinates sc = new SimpleCoordinates();
+		sc.latitude = 11.11;
+		sc.longitude = sc.altitude = 13.12;
+		mi.geolocation = sc;
+		mi.releaseDate = new Date(System.currentTimeMillis());
+		mi.modifiedDate = mi.releaseDate;
+		mi.title = "IMG_marius";
+		mi.type = MediaItemType.IMAGE.toString();
+
+		presistMediaItem(mi);
+		// damn HTML
+		
 		this.SendMediaFolders(successCallback, errorCallback);
 		return null;
 	}
@@ -223,12 +242,118 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		 * fir.execute(null);
 		 */
 		this.SendMediaItems(successCallback, errorCallback, folderId, abstractFilter, sortMode, count, offset);
+
 		return null;
 	}
 
 	/*
 	 * Private Methods
 	 */
+
+	private void presistMediaItem(MediaItem mi) {
+		if (mi == null)
+			return;
+
+		Uri location = null;
+		ContentValues updatedValues = new ContentValues();
+		String selectionClause = null;
+
+		MediaItemType mit = MediaItemType.valueOf(mi.type);
+		switch (mit) {
+		case AUDIO: {
+			location = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+
+			MediaAudio ma = (MediaAudio) mi;
+			updatedValues.put(MediaStore.Audio.Media.TITLE_KEY, ma.title);
+			updatedValues.put(MediaStore.Audio.Media.ALBUM, ma.album);
+			updatedValues.put(MediaStore.Audio.Media.ARTIST, ma.artists[0]);
+			updatedValues.put(MediaStore.Audio.Media.COMPOSER, ma.composers[0]);
+			updatedValues.put(MediaStore.Audio.Media.TRACK, ma.trackNumber);
+			updatedValues.put(MediaStore.Audio.Media.BOOKMARK, ma.playedTime);
+
+			selectionClause = attrNameToAudioColumnNameMapping.get("itemURI") + " like ?";
+			break;
+		}
+		case IMAGE: {
+			location = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+			MediaImage mImg = (MediaImage) mi;
+			updatedValues.put(MediaStore.Images.Media.TITLE, mImg.title);
+			updatedValues.put(MediaStore.Images.Media.DESCRIPTION, mImg.description);
+			updatedValues.put(MediaStore.Images.Media.LATITUDE, mImg.geolocation.latitude);
+			updatedValues.put(MediaStore.Images.Media.LONGITUDE, mImg.geolocation.longitude);
+
+			String orient = getOrientationFromMediaImageOrientation(mImg.orientation);
+			updatedValues.put(MediaStore.Images.Media.ORIENTATION, orient);
+
+			selectionClause = attrNameToImageColumnNameMapping.get("itemURI") + " like ?";
+			break;
+		}
+		case VIDEO: {
+			location = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+
+			MediaVideo mv = (MediaVideo) mi;
+			updatedValues.put(MediaStore.Video.Media.TITLE, mv.title);
+			updatedValues.put(MediaStore.Video.Media.DESCRIPTION, mv.description);
+			updatedValues.put(MediaStore.Video.Media.LATITUDE, mv.geolocation.latitude);
+			updatedValues.put(MediaStore.Video.Media.LONGITUDE, mv.geolocation.longitude);
+			updatedValues.put(MediaStore.Video.Media.ALBUM, mv.album);
+			updatedValues.put(MediaStore.Video.Media.ARTIST, mv.artists[0]);
+			updatedValues.put(MediaStore.Video.Media.BOOKMARK, mv.playedTime);
+
+			selectionClause = attrNameToVideoColumnNameMapping.get("itemURI") + " like ?";
+			break;
+		}
+		default: {
+			return;
+		}
+		}
+
+		String[] selectionArgs = new String[] { mi.itemURI };
+		int rowsUpdated = 0;
+		try {
+			rowsUpdated = androidContext.getContentResolver().update(location, updatedValues,
+					selectionClause, selectionArgs);
+		} catch (Exception e) {
+			// new DeviceAPIError(DeviceAPIError.INVALID_VALUES_ERR);
+		}
+		Log.i(TAG, "UpdateItems - Number of affected rows: " + rowsUpdated);
+
+		if (rowsUpdated == 0) {
+			// Do something
+		}
+
+	}
+
+	private String getOrientationFromMediaImageOrientation(String miOrientation) {
+		if (miOrientation == null || miOrientation.isEmpty())
+			return null;
+
+		String orient = null;
+		switch (MediaImageOrientation.valueOf(miOrientation)) {
+		case NORMAL: {
+			orient = String.valueOf(0);
+			break;
+		}
+		case ROTATE_180: {
+			orient = String.valueOf(180);
+			break;
+		}
+		case ROTATE_270: {
+			orient = String.valueOf(270);
+			break;
+		}
+		case ROTATE_90: {
+			orient = String.valueOf(90);
+			break;
+		}
+		default: {
+			orient = String.valueOf(0);
+		}
+		}
+
+		return orient;
+	}
 
 	private void populateFolderIdToPathMapping() {
 		folderIDtoPathMapping = new HashMap<String, String>() {
@@ -288,8 +413,8 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 		mf.folderURI = file.getPath();
 		mf.title = file.getName();
-		// TODO determine is on internal or external storage, but media is usually on external storage. If no microSD card is supported, 
-		//Android still treats media files as being on external storage.
+		// TODO determine is on internal or external storage, but media is usually on external storage. If no microSD card is supported,
+		// Android still treats media files as being on external storage.
 		mf.storageType = MediaFolderStorageType.EXTERNAL.toString();
 		// Careful
 		String d = new String().valueOf(file.lastModified());
@@ -784,7 +909,7 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		cf.filters = new AbstractFilter[] { af, ar };
 
 		abstractFilter = cf;
-//		folderId = "c3418983-f961-37fb-9950-49c67426dc08"; // pics folder
+		// folderId = "c3418983-f961-37fb-9950-49c67426dc08"; // pics folder
 
 		try {
 			selection = getSelectionFromFilter(mit, abstractFilter, folderId);
@@ -821,7 +946,6 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			concretePopulateMediaItemMethod.invoke(this, mi, cursor);
 			resultList.add(mi);
 		} while (cursor.moveToNext());
-
 
 		cursor.close();
 		cursor = null;
@@ -972,7 +1096,6 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		}
 		}
 
-		mi.editableAttributes = new String[] { "title" };
 		mi.id = cursor.getString(cursor.getColumnIndex(id));
 		mi.title = cursor.getString(cursor.getColumnIndex(title));
 		mi.itemURI = cursor.getString(cursor.getColumnIndex(uri));
