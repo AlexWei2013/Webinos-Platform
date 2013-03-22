@@ -570,21 +570,29 @@ public class PendingFindOperationImpl extends PendingFindOperation {
 			}
 			StringBuilder sb = new StringBuilder();
 
-			if (sortMode != null) {
+			// If sortMode is missing, count will fail due to Android's query method so I'm providing a default sortMode.
+			SortMode safeSortMode;
+			if (sortMode == null) {
+				safeSortMode = new SortMode();
+				safeSortMode.attributeName = "size";
+				safeSortMode.order = SortModeOrder.DESC.toString();
+			} else {
+				safeSortMode = sortMode;
+			}
 
 				// Determine the column name to sort by
 				String colName = null;
 				switch (mit) {
 				case IMAGE: {
-					colName = attrNameToImageColumnNameMapping.get(sortMode.attributeName);
+					colName = attrNameToImageColumnNameMapping.get(safeSortMode.attributeName);
 					break;
 				}
 				case AUDIO: {
-					colName = attrNameToAudioColumnNameMapping.get(sortMode.attributeName);
+					colName = attrNameToAudioColumnNameMapping.get(safeSortMode.attributeName);
 					break;
 				}
 				case VIDEO: {
-					colName = attrNameToVideoColumnNameMapping.get(sortMode.attributeName);
+					colName = attrNameToVideoColumnNameMapping.get(safeSortMode.attributeName);
 					break;
 				}
 				default:
@@ -595,9 +603,9 @@ public class PendingFindOperationImpl extends PendingFindOperation {
 				}
 
 				// Sort ascending or descending
-				String ascOrDesc = sortMode.order.toUpperCase().equals("DESC") ? " DESC" : " ASC";
+				String ascOrDesc = safeSortMode.order.toUpperCase().equals("DESC") ? " DESC" : " ASC";
 				sb.append(ascOrDesc);
-			}
+			
 
 			// Limit the nr. of results
 			if (count != null) {
@@ -700,11 +708,16 @@ public class PendingFindOperationImpl extends PendingFindOperation {
 			ArrayList<MediaItem> resultList = new ArrayList<MediaItem>();
 			Cursor cursor = null;
 			try {
+				Log.i(TAG, " ########################################### \n");
+				Log.i(TAG, "Location: " + locationUri);
+				Log.i(TAG, "Projection: " + projection);
+				Log.i(TAG, "Selection: " + selection);
+				Log.i(TAG, "Selection args: " + selectionArgs);
+				Log.i(TAG, "Sort/ ORDER /Count: " + sortOrder);
 				cursor = _androidContext.getContentResolver().query(locationUri, projection, selection,
 						selectionArgs, sortOrder);
-
 			} catch (Exception e) {
-				Log.w(TAG, e.getCause());
+				e.printStackTrace();
 				return resultList;
 			}
 			try {
