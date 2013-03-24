@@ -83,6 +83,7 @@ public class PendingFindOperationImpl extends PendingFindOperation {
 			// put("width", MediaStore.Images.Media.WIDTH);
 			// put("width", MediaStore.Images.Media.HEIGHT);
 			put("orientation", MediaStore.Images.Media.ORIENTATION);
+			put("mimeType", MediaStore.Images.Media.MIME_TYPE);
 		}
 	};
 
@@ -110,6 +111,7 @@ public class PendingFindOperationImpl extends PendingFindOperation {
 			put("resolution", MediaStore.Video.Media.RESOLUTION);
 			put("playedTime", MediaStore.Video.Media.BOOKMARK);
 			// put("playedCount", MediaStore.Video.Media.???);
+			put("mimeType", MediaStore.Video.Media.MIME_TYPE);
 		}
 	};
 
@@ -137,6 +139,7 @@ public class PendingFindOperationImpl extends PendingFindOperation {
 			// put("bitrate", MediaStore.Audio.Media.???);
 			// put("playedCount", MediaStore.Audio.Media.???);
 			put("playedTime", MediaStore.Audio.Media.BOOKMARK);
+			put("mimeType", MediaStore.Audio.Media.MIME_TYPE);
 		}
 	};
 

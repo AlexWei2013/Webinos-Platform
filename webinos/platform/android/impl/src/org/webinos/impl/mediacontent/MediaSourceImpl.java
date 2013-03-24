@@ -18,30 +18,18 @@
 
 package org.webinos.impl.mediacontent;
 
-import java.io.InvalidClassException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
 import org.meshpoint.anode.AndroidContext;
 import org.meshpoint.anode.module.IModule;
 import org.meshpoint.anode.module.IModuleContext;
-import org.webinos.api.DeviceAPIError;
 import org.webinos.api.ErrorCallback;
 import org.webinos.api.SuccessCallback;
 import org.webinos.api.mediacontent.AbstractFilter;
-import org.webinos.api.mediacontent.AttributeFilter;
-import org.webinos.api.mediacontent.AttributeRangeFilter;
-import org.webinos.api.mediacontent.CompositeFilter;
-import org.webinos.api.mediacontent.CompositeFilterType;
 import org.webinos.api.mediacontent.FilterMatchFlag;
 import org.webinos.api.mediacontent.MediaAudio;
-import org.webinos.api.mediacontent.MediaFolder;
 import org.webinos.api.mediacontent.MediaFolderArraySuccessCallback;
-import org.webinos.api.mediacontent.MediaFolderStorageType;
 import org.webinos.api.mediacontent.MediaImage;
 import org.webinos.api.mediacontent.MediaImageOrientation;
 import org.webinos.api.mediacontent.MediaItem;
@@ -52,13 +40,9 @@ import org.webinos.api.mediacontent.MediaVideo;
 import org.webinos.api.mediacontent.PendingFindOperation;
 import org.webinos.api.mediacontent.PendingGetOperation;
 import org.webinos.api.mediacontent.PendingUpdateOperation;
-import org.webinos.api.mediacontent.SimpleCoordinates;
 import org.webinos.api.mediacontent.SortMode;
-import org.webinos.api.mediacontent.SortModeOrder;
-
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -68,108 +52,17 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 
 	private static final String TAG = "org.webinos.impl.MediaContent.MediaSourceImpl";
 	private Context androidContext;
-	private HashMap<String, String> filterMatchFlagToSqlOperatorMapping = new HashMap<String, String>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -6849629792064412403L;
 
-		{
-			put(FilterMatchFlag.EXACTLY.toString(), " = ");
-			put(FilterMatchFlag.FULLSTRING.toString(), " like ");
-			put(FilterMatchFlag.CONTAINS.toString(), " like ");
-			put(FilterMatchFlag.STARTSWITH.toString(), " like ");
-			put(FilterMatchFlag.ENDSWITH.toString(), " like ");
-			/**
-			 * Separate query for table columns: PRAGMA table_info(tablename); and then go through all of them checking whether the needed attribute(i.e. column name) exists.
-			 * 
-			 * Beware! For now EXISTS is ignored.
-			 */
-			// put(FilterMatchFlag.EXISTS.toString(),"???);
-
-		}
-	};
-
-	private HashMap<String, String> attrNameToImageColumnNameMapping = new HashMap<String, String>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -176270944529455326L;
-
-		{
-			put("id", MediaStore.Images.Media._ID);
-			put("title", MediaStore.Images.Media.TITLE);
-			put("itemURI", MediaStore.Images.Media.DATA);
-			put("releaseDate", MediaStore.Images.Media.DATE_TAKEN);
-			put("modifiedDate", MediaStore.Images.Media.DATE_MODIFIED);
-			put("size", MediaStore.Images.Media.SIZE);
-			put("description", MediaStore.Images.Media.DESCRIPTION);
-			put("latitude", MediaStore.Images.Media.LATITUDE);
-			put("longitude", MediaStore.Images.Media.LONGITUDE);
-			// put("width", MediaStore.Images.Media.WIDTH);
-			// put("width", MediaStore.Images.Media.HEIGHT);
-			put("orientation", MediaStore.Images.Media.ORIENTATION);
-		}
-	};
-
-	private HashMap<String, String> attrNameToVideoColumnNameMapping = new HashMap<String, String>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 8736202366138949678L;
-
-		{
-			put("id", MediaStore.Video.Media._ID);
-			put("title", MediaStore.Video.Media.TITLE);
-			put("itemURI", MediaStore.Video.Media.DATA);
-			put("releaseDate", MediaStore.Video.Media.DATE_TAKEN);
-			put("modifiedDate", MediaStore.Video.Media.DATE_MODIFIED);
-			put("size", MediaStore.Video.Media.SIZE);
-			put("description", MediaStore.Video.Media.DESCRIPTION);
-			put("latitude", MediaStore.Video.Media.LATITUDE);
-			put("longitude", MediaStore.Video.Media.LONGITUDE);
-			put("album", MediaStore.Video.Media.ALBUM);
-			put("artist", MediaStore.Video.Media.ARTIST);
-			put("duration", MediaStore.Video.Media.DURATION);
-			// put("width", MediaStore.Video.Media.WIDTH);
-			// put("width", MediaStore.Video.Media.HEIGHT);
-			put("resolution", MediaStore.Video.Media.RESOLUTION);
-			put("playedTime", MediaStore.Video.Media.BOOKMARK);
-			// put("playedCount", MediaStore.Video.Media.???);
-		}
-	};
-
-	private HashMap<String, String> attrNameToAudioColumnNameMapping = new HashMap<String, String>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 5487498224217244507L;
-
-		{
-			put("id", MediaStore.Audio.Media._ID);
-			put("title", MediaStore.Audio.Media.TITLE);
-			put("itemURI", MediaStore.Audio.Media.DATA);
-			put("releaseDate", MediaStore.Audio.Media.DATE_ADDED);
-			put("modifiedDate", MediaStore.Audio.Media.DATE_MODIFIED);
-			put("size", MediaStore.Audio.Media.SIZE);
-			put("album", MediaStore.Audio.Media.ALBUM);
-			// put("genre", MediaStore.Audio.Media.???);
-			put("artist", MediaStore.Audio.Media.ARTIST);
-			put("composer", MediaStore.Audio.Media.COMPOSER);
-			put("trackNumber", MediaStore.Audio.Media.TRACK);
-			// put("lyrics", MediaStore.Audio.Media.???);
-			// put("copyright", MediaStore.Audio.Media.???);
-			put("duration", MediaStore.Audio.Media.DURATION);
-			// put("bitrate", MediaStore.Audio.Media.???);
-			// put("playedCount", MediaStore.Audio.Media.???);
-			put("playedTime", MediaStore.Audio.Media.BOOKMARK);
-		}
-	};
-
+	/**
+	 * Maps unique folder IDs to their respective paths
+	 */
 	private HashMap<String, String> folderIDtoPathMapping = null;
 	
 	private PendingGetOperationImpl pgoImpl = null;
 	private PendingFindOperationImpl pfoImpl = null;
+	
+	
+	
 	/**
 	 * IModule methods
 	 */
@@ -197,25 +90,24 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 	@Override
 	public void updateItem(MediaItem item) {
 		// TODO Auto-generated method stub
-		presistMediaItem(item);
+//		presistMediaItem(item);
 	}
 
 	@Override
 	public PendingUpdateOperation updateItemsBatch(MediaItem[] items, SuccessCallback successCallback,
 			ErrorCallback errorCallback) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public PendingGetOperation getFolders(MediaFolderArraySuccessCallback successCallback,
 			ErrorCallback errorCallback) {
-		if(this.folderIDtoPathMapping == null)
+		if (this.folderIDtoPathMapping == null)
 			populateFolderIdToPathMapping();
-		
-		if(this.pgoImpl == null)
+
+		if (this.pgoImpl == null)
 			this.pgoImpl = new PendingGetOperationImpl();
-		
+
 		return this.pgoImpl.Get(successCallback, errorCallback, folderIDtoPathMapping);
 	}
 
@@ -224,23 +116,61 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 			ErrorCallback errorCallback, String folderId, AbstractFilter abstractFilter, SortMode sortMode,
 			Integer count, Integer offset) {
 
-	
-
-		if(this.folderIDtoPathMapping == null)
+		if (this.folderIDtoPathMapping == null)
 			populateFolderIdToPathMapping();
-			
-		if(this.pfoImpl == null){
+
+		if (this.pfoImpl == null) {
 			this.pfoImpl = new PendingFindOperationImpl();
 		}
-		
-		return this.pfoImpl.Get(successCallback, errorCallback, androidContext, folderIDtoPathMapping, folderId, abstractFilter, sortMode, count, offset);
-		
+
+		return this.pfoImpl.Get(successCallback, errorCallback, androidContext, folderIDtoPathMapping,
+				folderId, abstractFilter, sortMode, count, offset);
+
 	}
 	
 
 	/*
 	 * Private Methods
 	 */
+	
+	/**
+	 * Populates a HashMap
+	 */
+	private void populateFolderIdToPathMapping() {
+		folderIDtoPathMapping = new HashMap<String, String>() {
+
+			private static final long serialVersionUID = -6084664999740353290L;
+
+			{
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+								.getName().getBytes()).toString(), Environment
+						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
+
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getName()
+								.getBytes()).toString(),
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getPath());
+
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getName()
+								.getBytes()).toString(),
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath());
+
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getName()
+								.getBytes()).toString(),
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getPath());
+
+				put(UUID.nameUUIDFromBytes(
+						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+								.getName().getBytes()).toString(), Environment
+						.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath());
+			}
+		};
+	}
+	
+	/** Conserved methods for updateItem andupdateItemsBatch 
 
 	private void presistMediaItem(MediaItem mi) {
 		if (mi == null)
@@ -347,41 +277,106 @@ public class MediaSourceImpl extends MediaSource implements IModule {
 		return orient;
 	}
 
+*/
+	
 	/**
-	 * Populates a HashMap
+	 * Conserved mappings
+	 * 
 	 */
-	private void populateFolderIdToPathMapping() {
-		folderIDtoPathMapping = new HashMap<String, String>() {
-
-			private static final long serialVersionUID = -6084664999740353290L;
-
-			{
-				put(UUID.nameUUIDFromBytes(
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-								.getName().getBytes()).toString(), Environment
-						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
-
-				put(UUID.nameUUIDFromBytes(
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getName()
-								.getBytes()).toString(),
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getPath());
-
-				put(UUID.nameUUIDFromBytes(
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getName()
-								.getBytes()).toString(),
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath());
-
-				put(UUID.nameUUIDFromBytes(
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getName()
-								.getBytes()).toString(),
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getPath());
-
-				put(UUID.nameUUIDFromBytes(
-						Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-								.getName().getBytes()).toString(), Environment
-						.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath());
-			}
-		};
-	}
+//	private HashMap<String, String> filterMatchFlagToSqlOperatorMapping = new HashMap<String, String>() {
+//		private static final long serialVersionUID = -6849629792064412403L;
+//
+//		{
+//			put(FilterMatchFlag.EXACTLY.toString(), " = ");
+//			put(FilterMatchFlag.FULLSTRING.toString(), " like ");
+//			put(FilterMatchFlag.CONTAINS.toString(), " like ");
+//			put(FilterMatchFlag.STARTSWITH.toString(), " like ");
+//			put(FilterMatchFlag.ENDSWITH.toString(), " like ");
+//			/**
+//			 * Separate query for table columns: PRAGMA table_info(tablename); and then go through all of them checking whether the needed attribute(i.e. column name) exists.
+//			 * 
+//			 * Beware! For now EXISTS is ignored.
+//			 */
+//			// put(FilterMatchFlag.EXISTS.toString(),"???);
+//
+//		}
+//	};
+//
+//	private HashMap<String, String> attrNameToImageColumnNameMapping = new HashMap<String, String>() {
+//		/**
+//		 * 
+//		 */
+//		private static final long serialVersionUID = -176270944529455326L;
+//
+//		{
+//			put("id", MediaStore.Images.Media._ID);
+//			put("title", MediaStore.Images.Media.TITLE);
+//			put("itemURI", MediaStore.Images.Media.DATA);
+//			put("releaseDate", MediaStore.Images.Media.DATE_TAKEN);
+//			put("modifiedDate", MediaStore.Images.Media.DATE_MODIFIED);
+//			put("size", MediaStore.Images.Media.SIZE);
+//			put("description", MediaStore.Images.Media.DESCRIPTION);
+//			put("latitude", MediaStore.Images.Media.LATITUDE);
+//			put("longitude", MediaStore.Images.Media.LONGITUDE);
+//			// put("width", MediaStore.Images.Media.WIDTH);
+//			// put("width", MediaStore.Images.Media.HEIGHT);
+//			put("orientation", MediaStore.Images.Media.ORIENTATION);
+//		}
+//	};
+//
+//	private HashMap<String, String> attrNameToVideoColumnNameMapping = new HashMap<String, String>() {
+//		/**
+//		 * 
+//		 */
+//		private static final long serialVersionUID = 8736202366138949678L;
+//
+//		{
+//			put("id", MediaStore.Video.Media._ID);
+//			put("title", MediaStore.Video.Media.TITLE);
+//			put("itemURI", MediaStore.Video.Media.DATA);
+//			put("releaseDate", MediaStore.Video.Media.DATE_TAKEN);
+//			put("modifiedDate", MediaStore.Video.Media.DATE_MODIFIED);
+//			put("size", MediaStore.Video.Media.SIZE);
+//			put("description", MediaStore.Video.Media.DESCRIPTION);
+//			put("latitude", MediaStore.Video.Media.LATITUDE);
+//			put("longitude", MediaStore.Video.Media.LONGITUDE);
+//			put("album", MediaStore.Video.Media.ALBUM);
+//			put("artist", MediaStore.Video.Media.ARTIST);
+//			put("duration", MediaStore.Video.Media.DURATION);
+//			// put("width", MediaStore.Video.Media.WIDTH);
+//			// put("width", MediaStore.Video.Media.HEIGHT);
+//			put("resolution", MediaStore.Video.Media.RESOLUTION);
+//			put("playedTime", MediaStore.Video.Media.BOOKMARK);
+//			// put("playedCount", MediaStore.Video.Media.???);
+//		}
+//	};
+//
+//	private HashMap<String, String> attrNameToAudioColumnNameMapping = new HashMap<String, String>() {
+//		/**
+//		 * 
+//		 */
+//		private static final long serialVersionUID = 5487498224217244507L;
+//
+//		{
+//			put("id", MediaStore.Audio.Media._ID);
+//			put("title", MediaStore.Audio.Media.TITLE);
+//			put("itemURI", MediaStore.Audio.Media.DATA);
+//			put("releaseDate", MediaStore.Audio.Media.DATE_ADDED);
+//			put("modifiedDate", MediaStore.Audio.Media.DATE_MODIFIED);
+//			put("size", MediaStore.Audio.Media.SIZE);
+//			put("album", MediaStore.Audio.Media.ALBUM);
+//			// put("genre", MediaStore.Audio.Media.???);
+//			put("artist", MediaStore.Audio.Media.ARTIST);
+//			put("composer", MediaStore.Audio.Media.COMPOSER);
+//			put("trackNumber", MediaStore.Audio.Media.TRACK);
+//			// put("lyrics", MediaStore.Audio.Media.???);
+//			// put("copyright", MediaStore.Audio.Media.???);
+//			put("duration", MediaStore.Audio.Media.DURATION);
+//			// put("bitrate", MediaStore.Audio.Media.???);
+//			// put("playedCount", MediaStore.Audio.Media.???);
+//			put("playedTime", MediaStore.Audio.Media.BOOKMARK);
+//		}
+//	};
+	
 
 }
